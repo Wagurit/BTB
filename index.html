@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Betriebstagebuch · 42. BImSchV</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0ea5e9;
+  --surface: #0284c7;
+  --surface2: #0369a1;
+  --border: #38bdf8;
+  --ok: #15803d;
+  --warn: #b45309;
+  --err: #b91c1c;
+  --text: #0f172a;
+  --muted: #1e3a5f;
+  --input-bg: #f0f9ff;
+  --header-h: 56px;
+  --tabs-h: 42px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+/* HEADER */
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--header-h); background: var(--surface2);
+  border-bottom: 1px solid var(--surface);
+  padding: 0 14px; display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #fff; white-space: nowrap; }
+.logo span { color: #bae6fd; font-weight: 400; }
+.header-role { margin-left: auto; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.5px; white-space: nowrap; }
+
+/* TABS */
+.tabs {
+  position: fixed; top: var(--header-h); left: 0; right: 0; z-index: 190;
+  height: var(--tabs-h); background: var(--surface);
+  border-bottom: 1px solid var(--surface2);
+  display: flex; overflow-x: auto; scrollbar-width: none; align-items: stretch;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+  padding: 0 14px; font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 14px; letter-spacing: 0.5px; color: #bae6fd;
+  border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; transition: all .15s;
+}
+.tab:hover { color: #fff; }
+.tab.active { color: #fff; border-bottom-color: #fff; }
+.tab-badge { background: var(--err); color: #fff; font-size: 10px; font-weight: 700; font-family: 'DM Mono', monospace; padding: 1px 5px; border-radius: 8px; }
+.tab-badge.w { background: var(--warn); }
+
+/* SCROLL */
+.scroll-area { position: fixed; top: calc(var(--header-h) + var(--tabs-h)); bottom: 0; left: 0; right: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.view { display: none; padding: 12px 12px 80px; }
+.view.active { display: block; }
+
+/* SECTION LABEL */
+.sl { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #0f172a; margin: 14px 0 8px; display: flex; align-items: center; gap: 10px; }
+.sl::after { content: ''; flex: 1; height: 1px; background: #7dd3fc; }
+
+/* CARDS */
+.card { background: #fff; border: 1px solid #bae6fd; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.10); margin-bottom: 10px; }
+.card-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--surface2); padding: 9px 14px; background: #e0f2fe; border-bottom: 1px solid #bae6fd; display: flex; align-items: center; gap: 8px; }
+.card-body { padding: 14px; }
+
+/* KUNDEN CARDS */
+.kc { background: #fff; border: 1px solid #bae6fd; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.10); margin-bottom: 10px; cursor: pointer; position: relative; transition: border-color .15s; }
+.kc:active { opacity: 0.9; }
+.kc-bar { height: 3px; }
+.kc-bar.ok { background: var(--ok); } .kc-bar.warn { background: var(--warn); } .kc-bar.err { background: var(--err); }
+.kc-body { padding: 14px; }
+.kc-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 17px; color: var(--text); }
+.kc-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+.meta2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.ml { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; color: var(--muted); text-transform: uppercase; }
+.mv { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); margin-top: 2px; }
+.mv.ok { color: var(--ok); } .mv.warn { color: var(--warn); } .mv.err { color: var(--err); }
+.kc-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #e0f2fe; }
+.foot-txt { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.pills { display: flex; gap: 4px; flex-wrap: wrap; }
+.pill { font-size: 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 0.5px; padding: 2px 8px; border-radius: 20px; }
+.pill.a { background: #fffbeb; color: var(--warn); border: 1px solid #fcd34d; }
+.pill.p { background: #fef2f2; color: var(--err); border: 1px solid #fca5a5; }
+.sdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.sdot.ok { background: var(--ok); } .sdot.warn { background: var(--warn); } .sdot.err { background: var(--err); }
+
+/* SEARCH */
+.search-wrap { position: relative; margin-bottom: 12px; }
+.search-input { width: 100%; background: #fff; border: 2px solid #7dd3fc; border-radius: 8px; padding: 11px 14px 11px 38px; font-family: 'Barlow', sans-serif; font-size: 15px; color: var(--text); outline: none; transition: border-color .15s; }
+.search-input:focus { border-color: var(--surface2); box-shadow: 0 0 0 2px #bae6fd; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 16px; pointer-events: none; }
+.autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 50; background: #fff; border: 1px solid #7dd3fc; border-top: none; border-radius: 0 0 8px 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); max-height: 220px; overflow-y: auto; display: none; }
+.autocomplete-list.show { display: block; }
+.ac-item { padding: 11px 14px; cursor: pointer; font-size: 14px; color: var(--text); border-bottom: 1px solid #e0f2fe; font-family: 'Barlow', sans-serif; }
+.ac-item:last-child { border-bottom: none; }
+.ac-item:hover, .ac-item.highlighted { background: #e0f2fe; }
+.ac-item strong { color: var(--surface2); }
+.ac-item-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* FORM FIELDS */
+.f { margin-bottom: 10px; }
+.f label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .5px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; }
+.f input, .f select, .f textarea { width: 100%; background: var(--input-bg); border: 1px solid #7dd3fc; border-radius: 6px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 14px; padding: 9px 10px; transition: border-color .15s; outline: none; -webkit-appearance: none; }
+.f input:focus, .f select:focus, .f textarea:focus { border-color: var(--surface2); box-shadow: 0 0 0 2px #bae6fd; }
+.f textarea { resize: none; height: 80px; font-family: 'Barlow', sans-serif; font-size: 13px; }
+.fw { position: relative; }
+.fw input { padding-right: 42px; }
+.fu { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); pointer-events: none; font-family: 'DM Mono', monospace; }
+.r2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.r3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.r4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+
+/* COMPUTED */
+.cbox { background: #e0f2fe; border: 1px solid #7dd3fc; border-radius: 6px; padding: 9px 10px; font-family: 'DM Mono', monospace; font-size: 14px; color: var(--text); min-height: 38px; display: flex; align-items: center; }
+.cbox.ok { background: #f0fdf4; border-color: #86efac; color: var(--ok); }
+.cbox.warn { background: #fffbeb; border-color: #fcd34d; color: var(--warn); }
+.cbox.err { background: #fef2f2; border-color: #fca5a5; color: var(--err); }
+
+/* ABW PILL */
+.abw-pill { display: inline-block; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; padding: 5px 12px; border-radius: 6px; margin-top: 5px; border: 1px solid; }
+.abw-pill.ok { background: #f0fdf4; border-color: #86efac; color: var(--ok); }
+.abw-pill.warn { background: #fffbeb; border-color: #fcd34d; color: var(--warn); }
+.abw-pill.err { background: #fef2f2; border-color: #fca5a5; color: var(--err); }
+
+/* IO BUTTONS */
+.io-row { display: flex; gap: 8px; }
+.io-btn { flex: 1; padding: 9px; border-radius: 6px; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; border: 1px solid #7dd3fc; background: var(--input-bg); color: var(--muted); transition: all .15s; text-align: center; }
+.io-btn.si { background: #f0fdf4; border-color: #86efac; color: var(--ok); }
+.io-btn.sn { background: #fef2f2; border-color: #fca5a5; color: var(--err); }
+
+/* FLAGS */
+.fc { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 8px; border: 1px solid #bae6fd; background: var(--input-bg); margin-bottom: 8px; cursor: pointer; transition: all .15s; }
+.fc.on { border-color: #fcd34d; background: #fffbeb; }
+.fc.on.prob { border-color: #fca5a5; background: #fef2f2; }
+.fc-box { width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0; border: 2px solid #7dd3fc; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; transition: all .15s; color: #fff; }
+.fc.on .fc-box { background: var(--warn); border-color: var(--warn); }
+.fc.on.prob .fc-box { background: var(--err); border-color: var(--err); }
+.fc-lbl { font-size: 13px; color: var(--text); font-weight: 500; }
+
+/* RESULT ROWS */
+.rr { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #e0f2fe; }
+.rr:last-child { border-bottom: none; }
+.rl { color: var(--muted); font-size: 12px; flex: 1; }
+.rv { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; color: var(--text); text-align: right; }
+.rv.ok { color: var(--ok); } .rv.warn { color: var(--warn); } .rv.err { color: var(--err); }
+.ru { color: #64748b; font-size: 11px; margin-left: 3px; }
+
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; font-family: 'Barlow', sans-serif; white-space: nowrap; }
+.btn-primary { background: #fff; color: var(--surface2); border: 1px solid #fff; font-weight: 700; width: 100%; font-size: 14px; padding: 11px; }
+.btn-primary:active { background: #e0f2fe; }
+.btn-blue { background: var(--surface2); color: #fff; border: 1px solid var(--surface2); }
+.btn-ghost { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: #fff; }
+.btn-danger { background: #fef2f2; color: var(--err); border: 1px solid #fca5a5; }
+.btn-white { background: #fff; color: var(--surface2); border: 1px solid #bae6fd; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-w { width: 100%; justify-content: center; }
+
+/* PROTOKOLL ENTRIES */
+.pe { background: #fff; border: 1px solid #bae6fd; border-radius: 10px; margin-bottom: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.pe-hdr { padding: 12px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; background: #f0f9ff; }
+.pe-date { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; flex: 1; color: var(--text); }
+.pe-tech { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+.chips { display: flex; gap: 4px; flex-wrap: wrap; }
+.chip { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; padding: 2px 8px; border-radius: 20px; }
+.chip.ok { background: #f0fdf4; color: var(--ok); border: 1px solid #86efac; }
+.chip.w { background: #fffbeb; color: var(--warn); border: 1px solid #fcd34d; }
+.chip.p { background: #f1f5f9; color: var(--muted); border: 1px solid #cbd5e1; }
+.chip.fa { background: #fffbeb; color: var(--warn); border: 1px solid #fcd34d; }
+.chip.fp { background: #fef2f2; color: var(--err); border: 1px solid #fca5a5; }
+.chev { font-size: 11px; color: var(--muted); transition: transform .2s; margin-left: 4px; }
+.chev.open { transform: rotate(180deg); }
+.pe-body { border-top: 1px solid #e0f2fe; padding: 12px 14px; background: #fafafa; }
+.pvals { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 10px; }
+.pv { border-bottom: 1px solid #e0f2fe; padding: 6px 0; }
+.pv:nth-child(odd) { padding-right: 10px; }
+.pvl { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.pvv { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--text); margin-top: 2px; }
+.pvv small { font-size: 11px; color: var(--muted); font-weight: 400; }
+.pvv.ok { color: var(--ok); } .pvv.w { color: var(--warn); } .pvv.er { color: var(--err); }
+.bm-box { background: #f0f9ff; border-radius: 6px; padding: 10px 12px; font-size: 13px; color: var(--muted); margin-bottom: 10px; border-left: 3px solid #7dd3fc; }
+.bm-box.w { border-left-color: #f59e0b; background: #fffbeb; }
+.ds-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: #e0f2fe; border-radius: 6px; padding: 10px 12px; }
+.ds-row label { font-size: 12px; color: var(--muted); font-weight: 600; }
+.ds-row select { background: #fff; border: 1px solid #7dd3fc; border-radius: 5px; padding: 5px 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px; outline: none; flex: 1; }
+
+/* INTERN ITEMS */
+.ii { background: #fff; border: 1px solid #bae6fd; border-radius: 10px; padding: 14px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); transition: opacity .3s; }
+.ii.done { opacity: 0.4; }
+.ii-k { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: var(--text); }
+.ii-a { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+.ii-chips { display: flex; gap: 4px; margin: 8px 0; }
+.ii-txt { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.ii-foot { display: flex; justify-content: space-between; align-items: center; }
+.ii-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+
+/* FILTER */
+.fbar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.fp2 { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; padding: 5px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); color: #bae6fd; cursor: pointer; transition: all .15s; }
+.fp2.on { background: #fff; color: var(--surface2); border-color: #fff; }
+
+/* ANLAGE CHIPS */
+.asc { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px; scrollbar-width: none; }
+.asc::-webkit-scrollbar { display: none; }
+.ac { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); color: #bae6fd; cursor: pointer; transition: all .15s; }
+.ac.active { background: #fff; color: var(--surface2); border-color: #fff; }
+
+/* DOSIER */
+.dc { background: #fff; border: 1px solid #bae6fd; border-radius: 8px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.dc-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; color: var(--surface2); }
+.dc-changed { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px; margin-bottom: 10px; }
+.dc-soll { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--warn); margin-top: 8px; padding: 6px 10px; background: #fffbeb; border-radius: 5px; border: 1px solid #fcd34d; }
+
+/* STAT ROW */
+.srow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.sc { background: #fff; border: 1px solid #bae6fd; border-radius: 8px; padding: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.slbl { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.sval { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; margin-top: 4px; color: var(--text); }
+.sval.ok { color: var(--ok); } .sval.warn { color: var(--warn); }
+.ssub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* BACK BAR */
+.bb { display: flex; align-items: center; gap: 6px; padding: 0 0 12px; cursor: pointer; color: #bae6fd; font-size: 13px; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; letter-spacing: 0.5px; }
+.bb:hover { color: #fff; }
+
+/* FAB */
+.fab { position: fixed; bottom: 20px; right: 16px; z-index: 300; width: 52px; height: 52px; border-radius: 50%; background: var(--surface2); color: #fff; font-size: 26px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(2,132,199,0.5); cursor: pointer; border: 2px solid rgba(255,255,255,0.3); transition: transform .15s; }
+.fab:active { transform: scale(0.93); }
+.fab.hidden { display: none; }
+
+/* WARN BADGES */
+.wb { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; border: 1px solid; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+.wb .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.wb.ok { background: #f0fdf4; border-color: #86efac; color: var(--ok); }
+.wb.ok .dot { background: #22c55e; }
+.wb.warn { background: #fffbeb; border-color: #fcd34d; color: var(--warn); }
+.wb.warn .dot { background: #f59e0b; }
+.wb.err { background: #fef2f2; border-color: #fca5a5; color: var(--err); }
+.wb.err .dot { background: #ef4444; }
+
+/* HISTORY ENTRIES */
+.he { background: #fff; border: 1px solid #bae6fd; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.he:hover { border-color: var(--surface2); }
+.he-hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; flex-wrap: wrap; gap: 4px; }
+.he-date { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--surface2); font-weight: 500; }
+.he-ts { font-size: 11px; color: var(--muted); }
+.he-stats { display: flex; gap: 10px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+.he-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.mb { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: .5px; }
+.mb-ok { background: #f0fdf4; color: var(--ok); border: 1px solid #86efac; }
+.mb-warn { background: #fffbeb; color: var(--warn); border: 1px solid #fcd34d; }
+.mb-err { background: #fef2f2; color: var(--err); border: 1px solid #fca5a5; }
+
+/* WOCHENTAG BUTTONS */
+.wt-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.wt-btn {
+  padding: 7px 10px; border-radius: 6px; border: 1px solid #7dd3fc;
+  background: var(--input-bg); color: var(--muted);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all .15s; letter-spacing: 0.3px;
+}
+.wt-btn.active { background: var(--surface2); color: #fff; border-color: var(--surface2); }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #7dd3fc; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 209.45454 155.34544" style="height:30px;width:auto;flex-shrink:0;"><g><path style="fill:#FFD700;stroke:#FFD700;stroke-width:0.2;fill-rule:evenodd;" d="m 86.961182,171.41126 c -1.187904,-1.81297 0.316163,-2.70927 1.798237,-1.07159 1.068157,1.1803 3.042209,1.13118 3.902531,-0.0971 0.917293,-1.30962 0.855072,-1.77314 -0.164754,-1.22734 -2.31994,1.24159 -4.976404,0.14579 -5.973054,-2.4639 -0.610887,-1.59959 -0.645674,-2.19665 -0.212256,-3.64326 0.732785,-2.44583 1.993488,-3.47749 4.249514,-3.47749 1.020585,0 1.982858,0.2059 2.138387,0.45755 0.194396,0.31454 0.469257,0.30279 0.879364,-0.0376 1.211411,-1.00538 1.507541,0.0553 1.507541,5.39958 0,6.9154 -0.169689,7.19434 -4.376579,7.19434 -2.749475,0 -3.143005,-0.10846 -3.748931,-1.03322 z M 48.630949,104.42901 C 32.316609,101.86862 19.759677,89.415968 18.507814,74.556051 17.381365,61.184829 27.065798,43.834489 46.943007,23.612413 c 7.038349,-7.160463 6.669329,-7.122211 12.628931,-1.309091 11.35662,11.077484 21.25052,24.140749 25.732175,33.975088 2.866813,6.290816 3.801268,10.224473 3.824046,16.097634 0.01846,4.75923 -0.102178,5.584717 -1.323918,9.059436 -0.739327,2.102693 -2.005043,4.915497 -2.812708,6.250673 -4.500301,7.439616 -13.017753,13.598357 -21.974365,15.889067 -4.045082,1.03456 -10.712954,1.43028 -14.386219,0.85379 z"/></g></svg>
+  <div class="logo">BTB <span>Betriebstagebuch</span></div>
+  <div class="header-role" id="header-role">MK · Techniker</div>
+</div>
+
+<div class="tabs" id="tabs">
+  <div class="tab active" onclick="tab('kunden')">🏭 Kunden</div>
+  <div class="tab" onclick="tab('protokolle')">📋 Protokolle</div>
+  <div class="tab" onclick="tab('dipslide')">🧫 Dipslide <span class="tab-badge" id="badge-dipslide">0</span></div>
+  <div class="tab" onclick="tab('angebote')">💼 Angebote <span class="tab-badge w" id="badge-angebote">0</span></div>
+  <div class="tab" onclick="tab('probleme')">⚠️ Probleme <span class="tab-badge" id="badge-probleme">0</span></div>
+  <div class="tab" onclick="tab('notizen')">📌 Notizen <span class="tab-badge w" id="badge-notizen" style="display:none">0</span></div>
+  <div class="tab" onclick="tab('rechnung')">🧾 Zu berechnen <span class="tab-badge w" id="badge-rechnung" style="display:none">0</span></div>
+</div>
+
+<button class="fab" id="fab" onclick="fabAction()">＋</button>
+
+<div class="scroll-area" id="scroll">
+
+  <!-- ═══ KUNDEN ═══ -->
+  <div class="view active" id="view-kunden">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" id="kundensuche" placeholder="Kunde suchen oder neu anlegen..." autocomplete="off" oninput="onSearch(this.value)" onkeydown="onSearchKey(event)">
+      <div class="autocomplete-list" id="ac-list"></div>
+    </div>
+    <div id="kunden-liste"></div>
+  </div>
+
+  <!-- ═══ PROTOKOLLE ═══ -->
+  <div class="view" id="view-protokolle">
+    <div id="proto-context" style="display:none">
+      <div class="bb" onclick="backToKunden()">← <span id="proto-kname">–</span></div>
+      <div class="asc" id="anlage-tabs"></div>
+      <div class="sl">⚙️ Dosierprogramm</div>
+      <div id="dosier-info"></div>
+      <div class="sl">📋 Protokolleinträge</div>
+      <div style="margin-bottom:10px;display:flex;gap:8px;">
+        <button class="btn btn-white btn-sm" onclick="exportCSV()">📊 Excel Export</button>
+        <button class="btn btn-blue btn-sm" onclick="neuerEintrag()">＋ Neuer Eintrag</button>
+      </div>
+      <div id="proto-list"></div>
+    </div>
+    <div id="proto-all">
+      <div style="color:#bae6fd;font-size:13px;margin-bottom:12px;">
+        Bitte einen Kunden auswählen — oder zum
+        <span onclick="tab('dipslide')" style="text-decoration:underline;cursor:pointer;color:#fff;">🧫 Dipslide-Reiter</span>
+        wechseln.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ DIPSLIDE ═══ -->
+  <div class="view" id="view-dipslide">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" id="ds-suche"
+        placeholder="Kunde suchen..."
+        autocomplete="off"
+        oninput="renderDipslideView(this.value)"
+        onkeydown="onDsSearchKey(event)">
+      <div class="autocomplete-list" id="ds-ac-list"></div>
+    </div>
+    <div id="ds-filter-row" style="margin-bottom:12px;">
+      <div class="fbar">
+        <button class="fp2 on" onclick="dsFilter('offen',this)">Ausstehend</button>
+        <button class="fp2" onclick="dsFilter('alle',this)">Alle anzeigen</button>
+      </div>
+    </div>
+    <div id="dipslide-view-liste"></div>
+  </div>
+
+  <!-- ═══ NEUER EINTRAG ═══ -->
+  <div class="view" id="view-neuer-eintrag">
+    <div class="bb" onclick="cancelEntry()">← Abbrechen</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:#fff;margin-bottom:2px;" id="ne-titel">–</div>
+    <div style="font-family:'DM Mono',monospace;font-size:11px;color:#bae6fd;margin-bottom:16px;" id="ne-sub">–</div>
+
+    <!-- 1. DATUM -->
+    <div class="card">
+      <div class="card-title">📅 Besuchsdatum</div>
+      <div class="card-body">
+        <div class="r2">
+          <div class="f"><label>Datum letzter Besuch</label><input type="text" id="ne-datum-alt" placeholder="TT.MM.JJJJ" oninput="calcAll()"></div>
+          <div class="f"><label>Datum aktueller Besuch</label><input type="text" id="ne-datum-neu" placeholder="TT.MM.JJJJ" oninput="calcAll()"></div>
+        </div>
+        <button class="btn btn-blue btn-w" onclick="neuerBesuch()" style="margin-top:6px;">🔄 Zählerstände &amp; Datum übertragen</button>
+      </div>
+    </div>
+
+    <!-- 2. ZW REFERENZ -->
+    <div class="card">
+      <div class="card-title">🚰 Zusatzwasser-Referenz (letzte Wartung)</div>
+      <div class="card-body">
+        <div class="r2" style="margin-bottom:8px;">
+          <div class="f" style="margin-bottom:0;"><label>Datum der Messung</label><input type="text" id="ne-zw-datum" placeholder="TT.MM.JJJJ"></div>
+          <div></div>
+        </div>
+        <div class="r3">
+          <div class="f"><label>LF ZW</label><div class="fw"><input type="number" id="ne-zw-lf"><span class="fu">µS</span></div></div>
+          <div class="f"><label>Chlorid ZW</label><div class="fw"><input type="number" id="ne-zw-cl"><span class="fu">mg/L</span></div></div>
+          <div class="f"><label>Härte ZW</label><div class="fw"><input type="number" id="ne-zw-haerte"><span class="fu">°dH</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. MESSWERTE LF -->
+    <div class="card">
+      <div class="card-title">📡 Messwerte LF</div>
+      <div class="card-body">
+        <div class="r2">
+          <div class="f"><label>LF Sollwert (Einstellung)</label><div class="fw"><input type="number" id="ne-lf-soll" oninput="calcAll()"><span class="fu">µS/cm</span></div></div>
+          <div class="f"><label>LF Ist (Regler-Anzeige)</label><div class="fw"><input type="number" id="ne-lf-ist" oninput="calcAll()"><span class="fu">µS/cm</span></div></div>
+        </div>
+        <div class="f">
+          <label>LF Gemessen (Handgerät)</label>
+          <div class="fw"><input type="number" id="ne-lf-gem" oninput="calcAll()"><span class="fu">µS/cm</span></div>
+          <div id="abw-out" style="margin-top:6px;"></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Abweichung: Handgerät vs. Regler-Anzeige</div>
+        </div>
+        <div class="f"><label>Titr. Härte Umlaufwasser</label><div class="fw"><input type="number" id="ne-haerte"><span class="fu">°dH</span></div></div>
+      </div>
+    </div>
+
+    <!-- 4. ZÄHLERSTÄNDE -->
+    <div class="card">
+      <div class="card-title">🔢 Zählerstände</div>
+      <div class="card-body">
+        <div class="r2">
+          <div class="f"><label>ZW letzter Stand</label><div class="fw"><input type="number" id="ne-zw-alt" oninput="calcAll()" placeholder="m³"><span class="fu">m³</span></div></div>
+          <div class="f"><label>ZW aktuell</label><div class="fw"><input type="number" id="ne-zw-neu" oninput="calcAll()"><span class="fu">m³</span></div></div>
+        </div>
+        <div class="r2" style="margin-top:6px;">
+          <div class="f"><label>Verbrauch ZW</label><div class="cbox" id="ne-verb-box">–</div></div>
+          <div class="f"><label>Verbrauch/Tag</label><div class="cbox" id="ne-verb-tag-box">–</div></div>
+        </div>
+        <div class="f" style="margin-top:6px;"><label>Abwasserzähler (optional)</label><div class="fw"><input type="number" id="ne-aw-zaehler"><span class="fu">m³</span></div></div>
+      </div>
+    </div>
+
+    <!-- 5. BZ FÜLLSTAND -->
+    <div class="card">
+      <div class="card-title">🟦 BZ – Biozid Füllstand</div>
+      <div class="card-body">
+        <div class="r3">
+          <div class="f"><label>Füllstand vorher</label><div class="fw"><input type="number" id="ne-bz-fs-vor"><span class="fu">L</span></div></div>
+          <div class="f"><label>Aufgefüllt auf <span style="font-weight:400;font-size:10px;">(optional)</span></label><div class="fw"><input type="number" id="ne-bz-fs-nach"><span class="fu">L</span></div></div>
+          <div class="f"><label>Lager gesamt</label><div class="fw"><input type="number" id="ne-bz-lager" placeholder="0"><span class="fu">L</span></div></div>
+        </div>
+        <div id="bz-fs-dosier-info" style="margin-top:8px;display:none;">
+          <div style="border-top:1px solid #e0f2fe;padding-top:8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+            <div><div class="pvl">Dos./Dosierung</div><div class="pvv" id="bz-fs-dos-pro-dos">–</div></div>
+            <div><div class="pvl">Dos./Woche</div><div class="pvv" id="bz-fs-dos-pro-woche">–</div></div>
+            <div><div class="pvl">Soll seit letztem Besuch</div><div class="pvv warn" id="bz-fs-soll">–</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. KT FÜLLSTAND -->
+    <div class="card">
+      <div class="card-title">🟩 KT – Korrosionsinhibitor Füllstand</div>
+      <div class="card-body">
+        <div class="r3">
+          <div class="f"><label>Füllstand vorher</label><div class="fw"><input type="number" id="ne-kt-fs-vor"><span class="fu">L</span></div></div>
+          <div class="f"><label>Aufgefüllt auf <span style="font-weight:400;font-size:10px;">(optional)</span></label><div class="fw"><input type="number" id="ne-kt-fs-nach"><span class="fu">L</span></div></div>
+          <div class="f"><label>Lager gesamt</label><div class="fw"><input type="number" id="ne-kt-lager" placeholder="0"><span class="fu">L</span></div></div>
+        </div>
+        <div style="border-top:1px solid #e0f2fe;padding-top:8px;margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div class="f" style="margin-bottom:0;"><label>KT Dos.-Rate (ml/m³)</label><div class="fw"><input type="number" id="ne-kt-rate" oninput="calcAll()" placeholder="5"><span class="fu">ml/m³</span></div></div>
+          <div class="f" style="margin-bottom:0;"><label>KT Soll-Verbrauch</label><div class="cbox" id="ne-kt-soll">–</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. IO/NIO -->
+    <div class="card">
+      <div class="card-title">✅ IO / NIO Checks</div>
+      <div class="card-body">
+        <div class="f"><label>Dosierpumpe BZ</label><div class="io-row"><button class="io-btn si" onclick="ioT(this,'si')">IO ✓</button><button class="io-btn" onclick="ioT(this,'sn')">NIO ✗</button></div></div>
+        <div class="f"><label>Dosierpumpe KT</label><div class="io-row"><button class="io-btn si" onclick="ioT(this,'si')">IO ✓</button><button class="io-btn" onclick="ioT(this,'sn')">NIO ✗</button></div></div>
+        <div class="f"><label>Absalzkugelhahn</label><div class="io-row"><button class="io-btn si" onclick="ioT(this,'si')">IO ✓</button><button class="io-btn" onclick="ioT(this,'sn')">NIO ✗</button></div></div>
+        <div class="f" style="margin-bottom:0"><label>Dipslide</label><div class="io-row"><button class="io-btn si" onclick="ioT(this,'si')">Gezogen ✓</button><button class="io-btn" onclick="ioT(this,'sn')">Nicht gezogen</button></div></div>
+      </div>
+    </div>
+
+    <!-- 8. BEMERKUNG -->
+    <div class="card">
+      <div class="card-title">📝 Bemerkungsfeld</div>
+      <div class="card-body"><div class="f" style="margin-bottom:0"><textarea id="ne-bemerkung" placeholder="Auffälligkeiten, Maßnahmen, Hinweise..."></textarea></div></div>
+    </div>
+
+    <!-- 9-12. FLAGS -->
+    <div class="fc" onclick="fcT(this)" id="flag-kt"><div class="fc-box"></div><span class="fc-lbl">📦 KT Angebot erstellen</span></div>
+    <div class="fc" onclick="fcT(this)" id="flag-bz"><div class="fc-box"></div><span class="fc-lbl">🧪 BZ Angebot erstellen</span></div>
+    <div class="fc" onclick="fcTmitNotiz(this,'ag')" id="flag-ag">
+      <div class="fc-box"></div>
+      <div style="flex:1">
+        <span class="fc-lbl">📋 Allgemeines Angebot</span>
+        <textarea id="notiz-ag" onclick="event.stopPropagation()"
+          placeholder="Interne Notiz zum Angebot (nicht für Kunden)..."
+          style="display:none;width:100%;margin-top:8px;background:#fff;border:1px solid #fcd34d;border-radius:5px;padding:7px 9px;font-size:12px;font-family:'Barlow',sans-serif;resize:none;height:60px;color:var(--text)"></textarea>
+      </div>
+    </div>
+    <div class="fc" onclick="fcTmitNotiz(this,'prob')" id="flag-prob">
+      <div class="fc-box"></div>
+      <div style="flex:1">
+        <span class="fc-lbl">🔴 Problem melden</span>
+        <textarea id="notiz-prob" onclick="event.stopPropagation()"
+          placeholder="Interne Problemnotiz (nicht für Kunden)..."
+          style="display:none;width:100%;margin-top:8px;background:#fff;border:1px solid #fca5a5;border-radius:5px;padding:7px 9px;font-size:12px;font-family:'Barlow',sans-serif;resize:none;height:60px;color:var(--text)"></textarea>
+      </div>
+    </div>
+
+    <!-- 13. BIOZID 1 -->
+    <div class="card" style="margin-top:10px;">
+      <div class="card-title">🦠 Biozid 1 – Dosierung</div>
+      <div class="card-body">
+        <div class="r3">
+          <div class="f"><label>Dos./Min (ml)</label><input type="number" id="ne-bz1-ml" oninput="calcAll()"></div>
+          <div class="f"><label>Dos.-Dauer (min)</label><input type="number" id="ne-bz1-dauer" oninput="calcAll()"></div>
+          <div class="f"><label>Dos./Woche</label><input type="number" id="ne-bz1-freq" oninput="calcAll()" placeholder="auto"></div>
+        </div>
+        <div class="f" style="margin-top:4px;"><label>Uhrzeit</label><input type="text" id="ne-bz1-zeit" placeholder="08:00" style="max-width:120px;"></div>
+        <div class="f">
+          <label>Dosiertage</label>
+          <div class="wt-row" id="wt-bz1">
+            <button class="wt-btn" onclick="toggleWT(this,'bz1')">Mo</button>
+            <button class="wt-btn" onclick="toggleWT(this,'bz1')">Di</button>
+            <button class="wt-btn" onclick="toggleWT(this,'bz1')">Mi</button>
+            <button class="wt-btn" onclick="toggleWT(this,'bz1')">Do</button>
+            <button class="wt-btn" onclick="toggleWT(this,'bz1')">Fr</button>
+            <button class="wt-btn" onclick="toggleWT(this,'bz1')">Sa</button>
+            <button class="wt-btn" onclick="toggleWT(this,'bz1')">So</button>
+          </div>
+        </div>
+        <div class="f"><label>Systemvolumen (m³)</label><div class="fw"><input type="number" id="ne-sys-vol" oninput="calcAll()"><span class="fu">m³</span></div></div>
+        <div id="bz1-ergebnis"></div>
+      </div>
+    </div>
+
+    <!-- 14. BIOZID 2 -->
+    <div class="card">
+      <div class="card-title">🦠 Biozid 2 – Dosierung <span style="font-weight:400;font-size:11px;">(optional)</span></div>
+      <div class="card-body">
+        <div class="r3">
+          <div class="f"><label>Dos./Min (ml)</label><input type="number" id="ne-bz2-ml" oninput="calcAll()"></div>
+          <div class="f"><label>Dos.-Dauer (min)</label><input type="number" id="ne-bz2-dauer" oninput="calcAll()"></div>
+          <div class="f"><label>Dos./Woche</label><input type="number" id="ne-bz2-freq" oninput="calcAll()" placeholder="auto"></div>
+        </div>
+        <div class="f" style="margin-top:4px;"><label>Uhrzeit</label><input type="text" id="ne-bz2-zeit" placeholder="20:00" style="max-width:120px;"></div>
+        <div class="f">
+          <label>Dosiertage</label>
+          <div class="wt-row" id="wt-bz2">
+            <button class="wt-btn" onclick="toggleWT(this,'bz2')">Mo</button>
+            <button class="wt-btn" onclick="toggleWT(this,'bz2')">Di</button>
+            <button class="wt-btn" onclick="toggleWT(this,'bz2')">Mi</button>
+            <button class="wt-btn" onclick="toggleWT(this,'bz2')">Do</button>
+            <button class="wt-btn" onclick="toggleWT(this,'bz2')">Fr</button>
+            <button class="wt-btn" onclick="toggleWT(this,'bz2')">Sa</button>
+            <button class="wt-btn" onclick="toggleWT(this,'bz2')">So</button>
+          </div>
+        </div>
+        <div id="bz2-ergebnis"></div>
+      </div>
+    </div>
+
+    <div style="height:16px"></div>
+    <button class="btn btn-primary" onclick="saveEntry()">✓ Eintrag speichern</button>
+    <div style="height:32px"></div>
+  </div>
+
+  <!-- ═══ ANGEBOTE ═══ -->
+  <div class="view" id="view-angebote">
+    <div class="search-wrap" style="margin-bottom:10px;">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" id="ang-suche" placeholder="Kunde suchen..." autocomplete="off" oninput="renderAngebote(angFilterDone,this.value)">
+    </div>
+    <div class="fbar">
+      <button class="fp2 on" id="flt-ang-offen" onclick="filterAngebote('offen',this)">Offen</button>
+      <button class="fp2" id="flt-ang-done" onclick="filterAngebote('done',this)">Erledigt</button>
+    </div>
+    <div id="angebote-liste"></div>
+  </div>
+
+  <!-- ═══ PROBLEME ═══ -->
+  <div class="view" id="view-probleme">
+    <div class="search-wrap" style="margin-bottom:10px;">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" id="prob-suche" placeholder="Kunde suchen..." autocomplete="off" oninput="renderProbleme(probFilterDone,this.value)">
+    </div>
+    <div class="fbar">
+      <button class="fp2 on" id="flt-prob-offen" onclick="filterProbleme('offen',this)">Offen</button>
+      <button class="fp2" id="flt-prob-done" onclick="filterProbleme('done',this)">Bearbeitet</button>
+    </div>
+    <div id="probleme-liste"></div>
+  </div>
+
+  <!-- ═══ NOTIZEN ═══ -->
+  <div class="view" id="view-notizen">
+    <div class="search-wrap" style="margin-bottom:10px;">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" id="notizen-suche" placeholder="Kunde suchen..." autocomplete="off" oninput="renderNotizenListe(this.value)">
+    </div>
+    <div class="fbar">
+      <button class="fp2 on" id="flt-not-aktiv" onclick="filterNotizen('aktiv',this)">Aktiv</button>
+      <button class="fp2" id="flt-not-alle" onclick="filterNotizen('alle',this)">Alle anzeigen</button>
+    </div>
+    <button class="btn btn-primary" style="margin-bottom:14px;" onclick="neueKundenNotiz()">＋ Neue Kunden-Notiz</button>
+    <div id="notizen-liste"></div>
+  </div>
+
+  <!-- ═══ RECHNUNG ═══ -->
+  <div class="view" id="view-rechnung">
+    <div class="search-wrap" style="margin-bottom:10px;">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" id="rech-suche" placeholder="Kunde suchen..." autocomplete="off" oninput="renderRechnungListe(this.value)">
+    </div>
+    <div class="fbar">
+      <button class="fp2 on" id="flt-rech-offen" onclick="filterRechnung('offen',this)">Offen</button>
+      <button class="fp2" id="flt-rech-arch" onclick="filterRechnung('arch',this)">Archiv</button>
+    </div>
+    <div id="rechnung-liste"></div>
+  </div>
+
+</div><!-- /scroll -->
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────
+let curTab = 'kunden';
+let curKunde = null;   // { name, anlagen:[...] }
+let curAnlage = 0;
+let prevTab = 'kunden';
+let editMode = false;  // false = neuer Eintrag, true = bestehenden erweitern
+let editProtokollId = null;
+
+// Alle Daten in localStorage
+function getDB() {
+  try { return JSON.parse(localStorage.getItem('btb_db') || '{"kunden":[]}'); } catch { return {kunden:[]}; }
+}
+function saveDB(db) { localStorage.setItem('btb_db', JSON.stringify(db)); }
+
+// Heute als TT.MM.JJJJ
+function todayStr() {
+  const d = new Date();
+  return p2(d.getDate()) + '.' + p2(d.getMonth()+1) + '.' + d.getFullYear();
+}
+function p2(n) { return String(n).padStart(2,'0'); }
+
+function parseDate(str) {
+  if (!str) return NaN;
+  str = str.trim();
+  if (str.includes('.')) {
+    const [dd,mm,yy] = str.split('.');
+    let y = +yy; if (y < 100) y += 2000;
+    return new Date(y, +mm-1, +dd);
+  }
+  if (str.includes('-')) return new Date(str);
+  return NaN;
+}
+function fmtDate(str) {
+  if (!str) return '–';
+  return str;
+}
+function tageDiff(a, b) {
+  const da = parseDate(a), db = parseDate(b);
+  if (isNaN(da) || isNaN(db)) return 0;
+  return Math.max(0, Math.round((db - da) / 86400000));
+}
+function fmt(v, dec=1) {
+  if (v === undefined || v === null || isNaN(v) || !isFinite(v)) return '–';
+  return Number(v).toFixed(dec).replace('.', ',');
+}
+
+// ── BERECHNUNGEN ──────────────────────────────────────────────────────────
+
+// Wochentag-Kürzel → JS getDay() Index (0=So, 1=Mo, ...)
+const WT_MAP = { 'Mo':1, 'Di':2, 'Mi':3, 'Do':4, 'Fr':5, 'Sa':6, 'So':0 };
+
+// Zählt exakte Dosierungen zwischen zwei Daten unter Berücksichtigung der Uhrzeit
+// tageStr z.B. "Mo/Mi/Fr", zeitStr z.B. "18:00", bisStr = aktuelles Datum
+function zaehleDosierungen(vonStr, bisStr, tageStr, zeitStr) {
+  const von = parseDate(vonStr);
+  const bis = parseDate(bisStr);
+  if (isNaN(von) || isNaN(bis) || von >= bis) return 0;
+  if (!tageStr || !tageStr.trim()) return 0;
+
+  const aktiveTage = new Set(
+    tageStr.split('/').map(t => WT_MAP[t.trim()]).filter(v => v !== undefined)
+  );
+  if (aktiveTage.size === 0) return 0;
+
+  // Ist bisStr heute? Dann aktuelle Uhrzeit vs. Dosierzeit prüfen
+  const jetzt = new Date();
+  const heute = new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate());
+  const bisIstHeute = (bis.getTime() === heute.getTime());
+
+  // Dosierzeit parsen (z.B. "18:00")
+  let dosierStunde = 0, dosierMinute = 0;
+  if (zeitStr && zeitStr.includes(':')) {
+    const [h, m] = zeitStr.split(':');
+    dosierStunde = parseInt(h) || 0;
+    dosierMinute = parseInt(m) || 0;
+  }
+
+  let count = 0;
+  const cur = new Date(von);
+  cur.setDate(cur.getDate() + 1); // Start: Tag NACH letztem Besuch
+
+  while (cur <= bis) {
+    if (aktiveTage.has(cur.getDay())) {
+      // Wenn heute: nur zählen wenn Dosierzeit bereits vorbei ist
+      const curIstHeute = (cur.getTime() === heute.getTime());
+      if (curIstHeute && bisIstHeute) {
+        const jetztMinuten = jetzt.getHours() * 60 + jetzt.getMinutes();
+        const dosierMinuten = dosierStunde * 60 + dosierMinute;
+        if (jetztMinuten >= dosierMinuten) count++;
+        // sonst: Dosierung noch nicht erfolgt → nicht zählen
+      } else {
+        count++;
+      }
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+  return count;
+}
+
+function calcBZ(ml_min, dauer_min, freq_woche, sys_vol, tage_seit, tageStr, vonStr, bisStr, zeitStr) {
+  const dos_pro_dos = (ml_min * dauer_min) / 1000;
+  const dos_pro_woche = dos_pro_dos * freq_woche;
+  const ml_m3 = sys_vol > 0 ? (dos_pro_dos * 1000) / sys_vol : 0;
+
+  let verbrauch_seit;
+  const anzahl = zaehleDosierungen(vonStr, bisStr, tageStr, zeitStr);
+  if (anzahl > 0 || (tageStr && tageStr.trim())) {
+    verbrauch_seit = anzahl * dos_pro_dos;
+  } else if (freq_woche > 0 && tage_seit > 0) {
+    verbrauch_seit = (tage_seit / 7) * dos_pro_woche;
+  } else {
+    verbrauch_seit = 0;
+  }
+
+  return { dos_pro_dos, dos_pro_woche, ml_m3, verbrauch_seit, anzahl_dosierungen: anzahl };
+}
+function calcKT(rate_ml_m3, zusatzwasser_m3) {
+  return (rate_ml_m3 * zusatzwasser_m3) / 1000; // L
+}
+
+// ── AUTOCOMPLETE SUCHE ────────────────────────────────────────────────────
+let acHighlight = -1;
+
+function onSearch(val) {
+  const db = getDB();
+  const list = document.getElementById('ac-list');
+  if (!val.trim()) { list.classList.remove('show'); renderKundenListe(''); return; }
+  renderKundenListe(val);
+  const matches = db.kunden.filter(k => k.name.toLowerCase().includes(val.toLowerCase()));
+  if (matches.length === 0) {
+    list.innerHTML = `<div class="ac-item" onclick="createKunde('${val.replace(/'/g,"\\'")}')">
+      <strong>+ Neuen Kunden anlegen:</strong> ${val}
+    </div>`;
+  } else {
+    list.innerHTML = matches.map((k,i) => `
+      <div class="ac-item" onclick="selectKunde('${k.name.replace(/'/g,"\\'")}')">
+        <strong>${k.name}</strong>
+        <div class="ac-item-sub">${k.anlagen?.length || 0} Anlage(n) · ${k.anlagen?.[0]?.protokolle?.length || 0} Einträge</div>
+      </div>
+    `).join('') + (matches.some(k=>k.name.toLowerCase()===val.toLowerCase()) ? '' :
+      `<div class="ac-item" onclick="createKunde('${val.replace(/'/g,"\\'")}')">
+        <strong>+ Neuen Kunden anlegen:</strong> ${val}
+      </div>`);
+  }
+  acHighlight = -1;
+  list.classList.add('show');
+}
+
+function onSearchKey(e) {
+  const list = document.getElementById('ac-list');
+  const items = list.querySelectorAll('.ac-item');
+  if (e.key === 'ArrowDown') { acHighlight = Math.min(acHighlight+1, items.length-1); items.forEach((it,i)=>it.classList.toggle('highlighted',i===acHighlight)); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { acHighlight = Math.max(acHighlight-1, 0); items.forEach((it,i)=>it.classList.toggle('highlighted',i===acHighlight)); e.preventDefault(); }
+  else if (e.key === 'Enter' && acHighlight >= 0) { items[acHighlight]?.click(); }
+  else if (e.key === 'Escape') { list.classList.remove('show'); }
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) document.getElementById('ac-list')?.classList.remove('show');
+});
+
+function createKunde(name) {
+  const db = getDB();
+  if (!db.kunden.find(k=>k.name===name)) {
+    db.kunden.push({name, anlagen:[{name:'Anlage 1', protokolle:[]}]});
+    saveDB(db);
+  }
+  selectKunde(name);
+}
+
+function selectKunde(name) {
+  document.getElementById('ac-list').classList.remove('show');
+  document.getElementById('kundensuche').value = name;
+  const db = getDB();
+  curKunde = db.kunden.find(k=>k.name===name) || null;
+  curAnlage = 0;
+  if (curKunde) {
+    document.getElementById('proto-kname').textContent = curKunde.name;
+    renderAnlagen();
+    renderProtoListe();
+    renderDosierInfo();
+    document.getElementById('proto-context').style.display = 'block';
+    document.getElementById('proto-all').style.display = 'none';
+    tab('protokolle');
+  }
+}
+
+function renderKundenListe(filter) {
+  const db = getDB();
+  const el = document.getElementById('kunden-liste');
+  let list = db.kunden;
+  if (filter) list = list.filter(k => k.name.toLowerCase().includes(filter.toLowerCase()));
+  if (list.length === 0) {
+    el.innerHTML = `<div style="color:#bae6fd;font-size:13px;padding:8px 0;">Noch keine Kunden. Oben suchen oder neu anlegen.</div>`;
+    return;
+  }
+  el.innerHTML = list.map(k => {
+    // Letztes Protokoll über alle Anlagen
+    const alleProtos = k.anlagen?.flatMap(a => (a.protokolle||[]).map(p=>({...p,_anlage:a.name}))) || [];
+    alleProtos.sort((a,b) => { const da=parseDate(a.datum_neu),db2=parseDate(b.datum_neu); return (isNaN(da)||isNaN(db2))?0:db2-da; });
+    const lastP = alleProtos[0] || null;
+
+    // Status nur nach LF-Abweichung
+    const abw = lastP ? (parseFloat(lastP.lf_gem)||0)-(parseFloat(lastP.lf_ist)||0) : 0;
+    const absPct = lastP?.lf_ist ? Math.abs(abw/lastP.lf_ist*100) : 0;
+    const status = !lastP ? '' : absPct>8?'err':absPct>4?'warn':'ok';
+
+    // Offene Flags für den farbigen Balken
+    const hatProblem = alleProtos.some(p=>p.flags?.prob&&!p.prob_done);
+    const hatAngebot = alleProtos.some(p=>(p.flags?.kt||p.flags?.bz||p.flags?.ag)&&!p.ang_done);
+    const barStatus = hatProblem ? 'err' : hatAngebot ? 'warn' : status || 'ok';
+
+    // Notizen für diesen Kunden
+    const kundeNotizen = getNotizen().filter(n=>n.aktiv && n.kunde===k.name);
+
+    return `<div class="kc ${barStatus}" onclick="selectKunde('${k.name.replace(/'/g,"\\'")}')">
+      <div class="kc-bar ${barStatus}"></div>
+      <div class="kc-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div class="kc-name">${k.name}</div>
+            <div class="kc-sub">${k.anlagen?.length||0} Anlage(n) · Letzter Eintrag: ${lastP?lastP.datum_neu:'–'}</div>
+          </div>
+          <div class="sdot ${barStatus}"></div>
+        </div>
+        ${kundeNotizen.length > 0 ? `
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;">
+            ${kundeNotizen.map(n=>`
+              <div style="background:${n.typ==='perm'?'#e0f2fe':'#fffbeb'};border-radius:6px;padding:7px 10px;font-size:12px;color:${n.typ==='perm'?'var(--surface2)':'var(--warn)'};display:flex;align-items:flex-start;gap:6px;">
+                <span style="flex-shrink:0;">${n.typ==='perm'?'📌':'⏳'}</span>
+                <span>${n.text}</span>
+              </div>`).join('')}
+          </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── DIPSLIDE HELPER ────────────────────────────────────────────────────────
+function dsCls(val) {
+  if (!val) return '';
+  if (val === '10⁶' || val === '10⁵') return 'w';  // gelb
+  if (val === '10⁴') return 'w';
+  return 'ok';
+}
+function dsOptions(selected='') {
+  return ['10⁰','10²','10⁴','10⁵','10⁶'].map(v =>
+    `<option value="${v}" ${selected===v?'selected':''}>${v}</option>`
+  ).join('');
+}
+
+// ── ANLAGE TABS ────────────────────────────────────────────────────────────
+function renderAnlagen() {
+  if (!curKunde) return;
+  const el = document.getElementById('anlage-tabs');
+  el.innerHTML = curKunde.anlagen.map((a,i)=>
+    `<div class="ac ${i===curAnlage?'active':''}" onclick="switchAnlage(${i})">${a.name}</div>`
+  ).join('') +
+  `<div class="ac" style="background:rgba(255,255,255,0.25);border-color:rgba(255,255,255,0.5);" onclick="anlagenVerwalten()">⚙️</div>`;
+}
+
+function anlagenVerwalten() {
+  if (!curKunde) return;
+  // Modal aufbauen
+  const existing = document.getElementById('anlage-modal');
+  if (existing) existing.remove();
+
+  const anlagenItems = curKunde.anlagen.map((a,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #e0f2fe;">
+      <span style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;">${a.name}</span>
+      <button class="btn btn-white btn-sm" onclick="renameAnlage(${i})">✏️ Umbenennen</button>
+    </div>`).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'anlage-modal';
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:flex-end;`;
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px 16px 0 0;width:100%;padding:20px;max-height:80vh;overflow-y:auto;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:var(--surface2);margin-bottom:4px;">
+        Anlagen verwalten
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">${curKunde.name}</div>
+      ${anlagenItems}
+      <button class="btn btn-blue btn-w" style="margin-top:14px;" onclick="addAnlageModal()">＋ Neue Anlage hinzufügen</button>
+      <button class="btn btn-ghost" style="width:100%;margin-top:8px;background:#f1f5f9;color:var(--muted);border:none;" onclick="document.getElementById('anlage-modal').remove()">Schließen</button>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target===modal) modal.remove(); });
+}
+
+function addAnlageModal() {
+  document.getElementById('anlage-modal')?.remove();
+  // Kleines Input-Modal
+  const modal = document.createElement('div');
+  modal.id = 'anlage-modal';
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;`;
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:12px;width:100%;max-width:380px;padding:20px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:var(--surface2);margin-bottom:14px;">Neue Anlage</div>
+      <input id="anlage-name-input" type="text" placeholder="z.B. RKW-02 Kühlturm West"
+        style="width:100%;border:2px solid #7dd3fc;border-radius:7px;padding:10px 12px;font-size:14px;outline:none;font-family:'Barlow',sans-serif;color:var(--text);">
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-blue" style="flex:1;" onclick="addAnlageConfirm()">✓ Anlegen</button>
+        <button class="btn btn-white" onclick="document.getElementById('anlage-modal').remove()">Abbrechen</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('anlage-name-input')?.focus(), 50);
+}
+
+function addAnlageConfirm() {
+  const name = document.getElementById('anlage-name-input')?.value?.trim();
+  if (!name) return;
+  document.getElementById('anlage-modal')?.remove();
+  const db = getDB();
+  const k = db.kunden.find(k=>k.name===curKunde.name);
+  k.anlagen.push({name, protokolle:[]});
+  curKunde = k; saveDB(db);
+  curAnlage = k.anlagen.length - 1;
+  renderAnlagen(); renderProtoListe(); renderDosierInfo();
+}
+
+function renameAnlage(i) {
+  document.getElementById('anlage-modal')?.remove();
+  const current = curKunde.anlagen[i].name;
+  const modal = document.createElement('div');
+  modal.id = 'anlage-modal';
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;`;
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:12px;width:100%;max-width:380px;padding:20px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:var(--surface2);margin-bottom:14px;">Anlage umbenennen</div>
+      <input id="rename-input" type="text" value="${current}"
+        style="width:100%;border:2px solid #7dd3fc;border-radius:7px;padding:10px 12px;font-size:14px;outline:none;font-family:'Barlow',sans-serif;color:var(--text);">
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-blue" style="flex:1;" onclick="renameAnlageConfirm(${i})">✓ Speichern</button>
+        <button class="btn btn-white" onclick="document.getElementById('anlage-modal').remove()">Abbrechen</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  setTimeout(() => { const inp = document.getElementById('rename-input'); inp?.focus(); inp?.select(); }, 50);
+}
+
+function renameAnlageConfirm(i) {
+  const neu = document.getElementById('rename-input')?.value?.trim();
+  if (!neu) return;
+  document.getElementById('anlage-modal')?.remove();
+  const db = getDB();
+  const k = db.kunden.find(k=>k.name===curKunde.name);
+  k.anlagen[i].name = neu;
+  curKunde = k; saveDB(db);
+  renderAnlagen();
+}
+function switchAnlage(i) { curAnlage = i; renderAnlagen(); renderProtoListe(); renderDosierInfo(); }
+
+// ── DOSIER INFO ────────────────────────────────────────────────────────────
+function renderDosierInfo() {
+  if (!curKunde) return;
+  const anlage = curKunde.anlagen[curAnlage];
+  const protos = anlage?.protokolle || [];
+  const last = protos[protos.length-1];
+  if (!last) { document.getElementById('dosier-info').innerHTML = '<div style="color:#bae6fd;font-size:13px;margin-bottom:12px;">Noch kein Eintrag vorhanden.</div>'; return; }
+  const tage = tageDiff(last.datum_neu, todayStr());
+  const heute = todayStr();
+
+  let html = '';
+  if (last.bz1_ml && last.bz1_dauer) {
+    const bz = calcBZ(+last.bz1_ml, +last.bz1_dauer, +last.bz1_freq||0, +last.sys_vol||0, tage, last.bz1_tage||'', last.datum_neu, heute, last.bz1_zeit||'');
+    const dosInfo = bz.anzahl_dosierungen > 0
+      ? `${bz.anzahl_dosierungen}× dosiert (${last.bz1_tage||'?'})`
+      : `~${fmt(tage/7*( +last.bz1_freq||0),1)}× gesch.`;
+    html += `<div class="dc">
+      <div class="dc-name">Biozid 1${last.bz1_name?' · '+last.bz1_name:''}</div>
+      <div class="dc-changed">Stand: ${last.datum_neu} · ${last.techniker||'–'}</div>
+      <div class="r3">
+        <div class="f" style="margin-bottom:0"><label>Menge/Dos.</label><div class="cbox">${fmt(bz.dos_pro_dos,2)} L</div></div>
+        <div class="f" style="margin-bottom:0"><label>Uhrzeit</label><div class="cbox">${last.bz1_zeit||'–'}</div></div>
+        <div class="f" style="margin-bottom:0"><label>Tage</label><div class="cbox">${last.bz1_tage||'–'}</div></div>
+      </div>
+      <div class="dc-soll">⚡ Soll seit letztem Besuch (${tage} Tage · ${dosInfo}): <strong>${fmt(bz.verbrauch_seit,2)} L</strong> · ${fmt(bz.ml_m3,0)} ml/m³</div>
+    </div>`;
+  }
+  if (last.bz2_ml && last.bz2_dauer) {
+    const bz = calcBZ(+last.bz2_ml, +last.bz2_dauer, +last.bz2_freq||0, +last.sys_vol||0, tage, last.bz2_tage||'', last.datum_neu, heute, last.bz2_zeit||'');
+    const dosInfo = bz.anzahl_dosierungen > 0
+      ? `${bz.anzahl_dosierungen}× dosiert (${last.bz2_tage||'?'})`
+      : `~${fmt(tage/7*(+last.bz2_freq||0),1)}× gesch.`;
+    html += `<div class="dc">
+      <div class="dc-name">Biozid 2${last.bz2_name?' · '+last.bz2_name:''}</div>
+      <div class="dc-changed">Stand: ${last.datum_neu} · ${last.techniker||'–'}</div>
+      <div class="r3">
+        <div class="f" style="margin-bottom:0"><label>Menge/Dos.</label><div class="cbox">${fmt(bz.dos_pro_dos,2)} L</div></div>
+        <div class="f" style="margin-bottom:0"><label>Uhrzeit</label><div class="cbox">${last.bz2_zeit||'–'}</div></div>
+        <div class="f" style="margin-bottom:0"><label>Tage</label><div class="cbox">${last.bz2_tage||'–'}</div></div>
+      </div>
+      <div class="dc-soll">⚡ Soll seit letztem Besuch (${tage} Tage · ${dosInfo}): <strong>${fmt(bz.verbrauch_seit,2)} L</strong> · ${fmt(bz.ml_m3,0)} ml/m³</div>
+    </div>`;
+  }
+  if (!html) html = '<div style="color:#bae6fd;font-size:13px;margin-bottom:12px;">Noch kein Dosierprogramm eingetragen.</div>';
+  document.getElementById('dosier-info').innerHTML = html;
+}
+
+// ── PROTOKOLL LISTE ────────────────────────────────────────────────────────
+function renderProtoListe() {
+  if (!curKunde) return;
+  const anlage = curKunde.anlagen[curAnlage];
+  const protos = (anlage?.protokolle || []).slice().reverse();
+  const el = document.getElementById('proto-list');
+  if (protos.length === 0) { el.innerHTML = '<div style="color:#bae6fd;font-size:13px;">Noch keine Einträge.</div>'; return; }
+  el.innerHTML = protos.map((p,i) => {
+    const realIdx = (anlage.protokolle.length-1) - i;
+    const abw = (parseFloat(p.lf_gem)||0) - (parseFloat(p.lf_ist)||0);
+    const pct = p.lf_ist ? Math.abs(abw/p.lf_ist*100) : 0;
+    const abwCls = pct>8?'er':pct>4?'w':'ok';
+    const dsVal = p.dipslide_ergebnis || '';
+    const dsChip = dsVal
+      ? `<span class="chip ${dsCls(dsVal)}">DS ${dsVal}</span>`
+      : p.dipslide_gezogen ? `<span class="chip p">DS ⏳</span>` : '';
+    const probBearbeitet = p.flags?.prob && p.prob_done;
+    const probOffen = p.flags?.prob && !p.prob_done;
+    const flagChips = [
+      p.flags?.kt&&!p.ang_done?'<span class="chip fa">KT</span>':'',
+      p.flags?.bz&&!p.ang_done?'<span class="chip fa">BZ</span>':'',
+      p.flags?.kt&&p.ang_done?'<span class="chip ok">✓ KT</span>':'',
+      p.flags?.bz&&p.ang_done?'<span class="chip ok">✓ BZ</span>':'',
+      probOffen?'<span class="chip fp">⚠ Problem</span>':'',
+      probBearbeitet?'<span class="chip w">⚡ bearbeitet</span>':''
+    ].join('');
+    // Bemerkung in Header-Vorschau
+    const bemHdr = p.bemerkung
+      ? `<div style="font-size:11px;color:var(--warn);font-family:'Barlow',sans-serif;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;">📝 ${p.bemerkung}</div>`
+      : '';
+
+    // Datenpillen: LF gemessen, Zählerstand, Füllstände
+    const lfPill = p.lf_gem
+      ? `<span class="chip ${abwCls==='ok'?'ok':abwCls==='w'?'w':'fp'}" style="font-size:10px;">⚡ ${p.lf_gem} µS</span>`
+      : '';
+    const zwPill = p.zw_neu
+      ? `<span class="chip p" style="font-size:10px;background:#f0f9ff;color:var(--surface2);border-color:#7dd3fc;">💧 ${p.zw_neu} m³</span>`
+      : '';
+
+    // BZ: leer+aufgefüllt / aufgefüllt / vorher
+    const bzVor = parseFloat(p.bz_fs_vor);
+    const bzNach = parseFloat(p.bz_fs_nach);
+    let bzFsPill = '';
+    if (p.bz_fs_vor !== undefined && p.bz_fs_vor !== '') {
+      if (bzVor === 0) {
+        const aufgef = (!isNaN(bzNach) && p.bz_fs_nach !== '') ? ` → ${bzNach} L` : '';
+        bzFsPill = `<span class="chip fp" style="font-size:10px;">🟦 LEER BZ${aufgef}</span>`;
+      } else {
+        const zeig = (!isNaN(bzNach) && p.bz_fs_nach !== '') ? bzNach : bzVor;
+        bzFsPill = `<span class="chip p" style="font-size:10px;background:#f0f9ff;color:var(--surface2);border-color:#7dd3fc;">🟦 BZ ${zeig} L</span>`;
+      }
+    }
+
+    // KT: gleiche Logik
+    const ktVor = parseFloat(p.kt_fs_vor);
+    const ktNach = parseFloat(p.kt_fs_nach);
+    let ktFsPill = '';
+    if (p.kt_fs_vor !== undefined && p.kt_fs_vor !== '') {
+      if (ktVor === 0) {
+        const aufgef = (!isNaN(ktNach) && p.kt_fs_nach !== '') ? ` → ${ktNach} L` : '';
+        ktFsPill = `<span class="chip fp" style="font-size:10px;">🟩 LEER KT${aufgef}</span>`;
+      } else {
+        const zeig = (!isNaN(ktNach) && p.kt_fs_nach !== '') ? ktNach : ktVor;
+        ktFsPill = `<span class="chip p" style="font-size:10px;background:#f0f9ff;color:var(--surface2);border-color:#7dd3fc;">🟩 KT ${zeig} L</span>`;
+      }
+    }
+
+    // Vermerk-Pille: wenn Problem bearbeitet und Vermerk vorhanden
+    const vermerkPill = (probBearbeitet && p.prob_vermerk)
+      ? `<span class="chip w" style="font-size:10px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle;">✏️ ${p.prob_vermerk}</span>`
+      : '';
+
+    const dataPills = [lfPill, zwPill, bzFsPill, ktFsPill, vermerkPill].filter(Boolean).join('');
+    return `<div class="pe" style="${probBearbeitet?'border-color:#fcd34d;':probOffen?'border-color:#fca5a5;':''}">
+      <div class="pe-hdr" onclick="zeigeProtoDetail(${realIdx})">
+        <div style="flex:1;min-width:0;">
+          <div class="pe-date">${p.datum_neu||'–'}</div>
+          <div class="pe-tech">${p.techniker||'–'}</div>
+          ${bemHdr}
+          ${dataPills ? `<div class="chips" style="flex-wrap:wrap;gap:4px;margin-top:5px;">${dataPills}</div>` : ''}
+        </div>
+        <div class="chips" style="flex-shrink:0;flex-direction:column;align-items:flex-end;gap:3px;">${dsChip}${flagChips}</div>
+        <span style="font-size:12px;color:var(--muted);margin-left:6px;">›</span>
+      </div>
+      <div class="pe-body">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-white btn-sm" onclick="zeigeProtoDetail(${realIdx})">👁 Vollansicht</button>
+          ${realIdx === anlage.protokolle.length - 1
+            ? `<button class="btn btn-sm" style="background:#fff7ed;border:1px solid #fdba74;color:#c2410c;font-weight:600;" onclick="editiereProtokoll(${realIdx})">✏️ Bearbeiten</button>`
+            : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveDipslide(idx, val) {
+  if (!val || !curKunde) return;
+  const db = getDB();
+  const k = db.kunden.find(k=>k.name===curKunde.name);
+  k.anlagen[curAnlage].protokolle[idx].dipslide_ergebnis = val;
+  curKunde = k; saveDB(db);
+  renderProtoListe(); renderKundenListe('');
+  updateBadges();
+}
+
+// ── PROTOKOLL EDITIEREN ────────────────────────────────────────────────────
+function editiereProtokoll(idx) {
+  if (!curKunde) return;
+  const anlage = curKunde.anlagen[curAnlage];
+  const p = anlage?.protokolle[idx];
+  if (!p) return;
+
+  editMode = true;
+  editProtokollId = p.id;
+
+  // Alle Felder vollständig befüllen
+  clearForm();
+  document.getElementById('ne-datum-alt').value = p.datum_alt || '';
+  document.getElementById('ne-datum-neu').value = p.datum_neu || '';
+  document.getElementById('ne-zw-datum').value = p.zw_datum || '';
+  document.getElementById('ne-zw-lf').value = p.zw_lf || '';
+  document.getElementById('ne-zw-cl').value = p.zw_cl || '';
+  document.getElementById('ne-zw-haerte').value = p.zw_haerte || '';
+  document.getElementById('ne-lf-soll').value = p.lf_soll || '';
+  document.getElementById('ne-lf-ist').value = p.lf_ist || '';
+  document.getElementById('ne-lf-gem').value = p.lf_gem || '';
+  document.getElementById('ne-haerte').value = p.haerte || '';
+  document.getElementById('ne-zw-alt').value = p.zw_alt || '';
+  document.getElementById('ne-zw-neu').value = p.zw_neu || '';
+  document.getElementById('ne-aw-zaehler').value = p.aw_zaehler || '';
+  document.getElementById('ne-bz-fs-vor').value = p.bz_fs_vor || '';
+  document.getElementById('ne-bz-fs-nach').value = p.bz_fs_nach || '';
+  document.getElementById('ne-bz-lager').value = p.bz_lager || '';
+  document.getElementById('ne-kt-fs-vor').value = p.kt_fs_vor || '';
+  document.getElementById('ne-kt-fs-nach').value = p.kt_fs_nach || '';
+  document.getElementById('ne-kt-lager').value = p.kt_lager || '';
+  document.getElementById('ne-kt-rate').value = p.kt_rate || '';
+  document.getElementById('ne-bz1-ml').value = p.bz1_ml || '';
+  document.getElementById('ne-bz1-dauer').value = p.bz1_dauer || '';
+  document.getElementById('ne-bz1-freq').value = p.bz1_freq || '';
+  document.getElementById('ne-bz1-zeit').value = p.bz1_zeit || '';
+  setWTFromStr('bz1', p.bz1_tage || '');
+  document.getElementById('ne-bz2-ml').value = p.bz2_ml || '';
+  document.getElementById('ne-bz2-dauer').value = p.bz2_dauer || '';
+  document.getElementById('ne-bz2-freq').value = p.bz2_freq || '';
+  document.getElementById('ne-bz2-zeit').value = p.bz2_zeit || '';
+  setWTFromStr('bz2', p.bz2_tage || '');
+  document.getElementById('ne-sys-vol').value = p.sys_vol || '';
+  document.getElementById('ne-bemerkung').value = p.bemerkung || '';
+
+  // IO-Buttons setzen
+  const ioRows = document.querySelectorAll('.io-row');
+  const ioVals = [p.io_bz, p.io_kt, p.io_abs, p.dipslide_gezogen ? 'Gezogen' : 'Nicht'];
+  ioRows.forEach((row, i) => {
+    const btns = row.querySelectorAll('.io-btn');
+    btns.forEach(b => b.classList.remove('si','sn'));
+    if (i < ioVals.length) {
+      const val = ioVals[i];
+      if (val === 'IO' || val === 'Gezogen') { btns[0]?.classList.add('si'); }
+      else if (val === 'NIO' || val === 'Nicht') { btns[1]?.classList.add('sn'); }
+      else { btns[0]?.classList.add('si'); }
+    }
+  });
+
+  // Flags setzen
+  const flagMap = { 'flag-kt': p.flags?.kt, 'flag-bz': p.flags?.bz, 'flag-ag': p.flags?.ag, 'flag-prob': p.flags?.prob };
+  Object.entries(flagMap).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el && val) {
+      el.classList.add('on');
+      el.querySelector('.fc-box').textContent = '✓';
+    }
+  });
+  // Notizen
+  if (p.notiz_ag) {
+    const ta = document.getElementById('notiz-ag');
+    if (ta) { ta.value = p.notiz_ag; ta.style.display = 'block'; }
+  }
+  if (p.notiz_prob) {
+    const ta = document.getElementById('notiz-prob');
+    if (ta) { ta.value = p.notiz_prob; ta.style.display = 'block'; }
+  }
+
+  document.getElementById('ne-titel').textContent = curKunde.name;
+  document.getElementById('ne-sub').textContent = `${anlage.name} · ✏️ Bearbeitung von ${p.datum_neu}`;
+  prevTab = 'protokolle';
+  tab('neuer-eintrag');
+  calcAll();
+}
+
+// ── PROTOKOLL VOLLANSICHT (readonly) ───────────────────────────────────────
+function zeigeProtoDetail(idx) {
+  const anlage = curKunde?.anlagen[curAnlage];
+  const p = anlage?.protokolle[idx];
+  if (!p) return;
+
+  const abw = (parseFloat(p.lf_gem)||0) - (parseFloat(p.lf_ist)||0);
+  const pct = p.lf_ist ? Math.abs(abw/p.lf_ist*100) : 0;
+  const abwCls = pct>8?'var(--err)':pct>4?'var(--warn)':'var(--ok)';
+  const dsVal = p.dipslide_ergebnis || '';
+
+  const row = (lbl, val, cls='') => val
+    ? `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e0f2fe;">
+        <span style="font-size:12px;color:var(--muted);">${lbl}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;${cls?'color:'+cls:''}">${val}</span>
+       </div>` : '';
+
+  const io = v => `<span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:${v==='IO'?'var(--ok)':'var(--err)'};">${v||'–'}</span>`;
+
+  const existing = document.getElementById('proto-detail-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'proto-detail-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:flex-end;overflow:hidden;';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px 16px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding:20px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:var(--surface2);flex:1;">
+          Protokoll ${p.datum_neu||'–'}
+        </div>
+        <button onclick="document.getElementById('proto-detail-modal').remove()"
+          style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);padding:0 4px;">✕</button>
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:16px;">
+        ${curKunde.name} · ${anlage.name} · ${p.techniker||'–'}
+      </div>
+
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;">📡 Leitfähigkeit</div>
+      ${row('LF Sollwert', p.lf_soll ? p.lf_soll+' µS/cm' : '')}
+      ${row('LF Ist (Regler)', p.lf_ist ? p.lf_ist+' µS/cm' : '')}
+      ${row('LF Gemessen', p.lf_gem ? p.lf_gem+' µS/cm' : '', abwCls)}
+      ${row('Abweichung Regler↔Gerät', p.lf_gem&&p.lf_ist ? (abw>=0?'+':'')+abw.toFixed(0)+' µS/cm' : '', abwCls)}
+      ${row('Titr. Härte', p.haerte ? p.haerte+' °dH' : '')}
+
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;">🚰 Zusatzwasser-Referenz</div>
+      ${row('Datum der Messung', p.zw_datum||'')}
+      ${row('LF Zusatzwasser', p.zw_lf ? p.zw_lf+' µS/cm' : '')}
+      ${row('Chlorid Zusatzwasser', p.zw_cl ? p.zw_cl+' mg/L' : '')}
+      ${row('Härte Zusatzwasser', p.zw_haerte ? p.zw_haerte+' °dH' : '')}
+
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;">🔢 Zähler & Verbrauch</div>
+      ${row('Zählerstand letzter Besuch', p.zw_alt ? p.zw_alt+' m³' : '')}
+      ${row('Zählerstand aktuell', p.zw_neu ? p.zw_neu+' m³' : '')}
+      ${p.zw_neu&&p.zw_alt ? row('Verbrauch', fmt(parseFloat(p.zw_neu)-parseFloat(p.zw_alt),1)+' m³') : ''}
+      ${row('Abwasserzähler', p.aw_zaehler ? p.aw_zaehler+' m³' : '')}
+
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;">🧪 Füllstände</div>
+      ${row('BZ Füllstand vorher', p.bz_fs_vor ? p.bz_fs_vor+' L' : '')}
+      ${row('BZ aufgefüllt auf', p.bz_fs_nach ? p.bz_fs_nach+' L' : '')}
+      ${row('BZ Lagerbestand', p.bz_lager ? p.bz_lager+' L' : '')}
+      ${row('KT Füllstand vorher', p.kt_fs_vor ? p.kt_fs_vor+' L' : '')}
+      ${row('KT aufgefüllt auf', p.kt_fs_nach ? p.kt_fs_nach+' L' : '')}
+      ${row('KT Lagerbestand', p.kt_lager ? p.kt_lager+' L' : '')}
+
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;">🦠 Biozid-Dosierung</div>
+      ${row('BZ1 Dos./Min', p.bz1_ml ? p.bz1_ml+' ml' : '')}
+      ${row('BZ1 Dauer', p.bz1_dauer ? p.bz1_dauer+' min' : '')}
+      ${row('BZ1 Uhrzeit', p.bz1_zeit||'')}
+      ${row('BZ1 Dosiertage', p.bz1_tage||'')}
+      ${p.bz2_ml ? row('BZ2 Dos./Min', p.bz2_ml+' ml') : ''}
+      ${p.bz2_ml ? row('BZ2 Dauer', p.bz2_dauer ? p.bz2_dauer+' min' : '') : ''}
+      ${p.bz2_ml ? row('BZ2 Uhrzeit', p.bz2_zeit||'') : ''}
+      ${p.bz2_ml ? row('BZ2 Dosiertage', p.bz2_tage||'') : ''}
+      ${row('Systemvolumen', p.sys_vol ? p.sys_vol+' m³' : '')}
+      ${row('KT Dosierrate', p.kt_rate ? p.kt_rate+' ml/m³' : '')}
+
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;">✅ Kontrollen</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Pumpe BZ</div>${io(p.io_bz)}</div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Pumpe KT</div>${io(p.io_kt)}</div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Absalzung</div>${io(p.io_abs)}</div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dipslide</div>
+          <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:${dsCls(dsVal)?'var(--warn)':'var(--ok)'};">
+            ${dsVal || (p.dipslide_gezogen ? '⏳ ausstehend' : '–')}
+          </span>
+        </div>
+      </div>
+
+      ${p.bemerkung ? `
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;">📝 Bemerkung</div>
+        <div style="background:#f0f9ff;border-radius:6px;padding:12px;font-size:13px;color:var(--text);border-left:3px solid #7dd3fc;">${p.bemerkung}</div>
+      ` : ''}
+      ${p.notiz_prob ? `
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;">🔒 Interne Notiz (Techniker)</div>
+        <div style="background:#fef2f2;border-radius:6px;padding:12px;font-size:13px;color:var(--err);border-left:3px solid #fca5a5;">${p.notiz_prob}</div>
+      ` : ''}
+      ${p.prob_vermerk ? `
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px;">✏️ Vermerk (bearbeitet)</div>
+        <div style="background:#fffbeb;border-radius:6px;padding:12px;font-size:13px;color:var(--warn);border-left:3px solid #fcd34d;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">${p.prob_vermerk_by||'–'} · ${p.prob_vermerk_date||'–'}</div>
+          ${p.prob_vermerk}
+        </div>
+      ` : ''}
+
+      <div style="height:20px;"></div>
+      <button onclick="document.getElementById('proto-detail-modal').remove()"
+        style="width:100%;padding:12px;background:var(--surface2);color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-weight:600;font-size:14px;cursor:pointer;">
+        Schließen
+      </button>
+      <div style="height:16px;"></div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target===modal) modal.remove(); });
+}
+
+// ── NEUER EINTRAG / ÜBERTRAGEN ─────────────────────────────────────────────
+function neuerEintrag() {
+  if (!curKunde) { alert('Bitte zuerst einen Kunden in der Suche auswählen.'); tab('kunden'); return; }
+  editMode = false; editProtokollId = null;
+  const anlage = curKunde?.anlagen[curAnlage];
+  const last = anlage?.protokolle?.slice(-1)[0];
+  clearForm();
+  document.getElementById('ne-datum-alt').value = last?.datum_neu || '';
+  document.getElementById('ne-datum-neu').value = todayStr();
+  // LF Soll und ZW-Referenz aus letztem Eintrag übernehmen (bleiben konstant)
+  if (last) {
+    document.getElementById('ne-lf-soll').value = last.lf_soll || '';
+    document.getElementById('ne-zw-lf').value = last.zw_lf || '';
+    document.getElementById('ne-zw-cl').value = last.zw_cl || '';
+    document.getElementById('ne-zw-haerte').value = last.zw_haerte || '';
+    document.getElementById('ne-zw-datum').value = last.zw_datum || '';
+    document.getElementById('ne-zw-alt').value = last.zw_neu || '';
+    // Dosierprogramm übernehmen
+    document.getElementById('ne-bz1-ml').value = last.bz1_ml || '';
+    document.getElementById('ne-bz1-dauer').value = last.bz1_dauer || '';
+    document.getElementById('ne-bz1-freq').value = last.bz1_freq || '';
+    document.getElementById('ne-bz1-zeit').value = last.bz1_zeit || '';
+    setWTFromStr('bz1', last.bz1_tage || '');
+    document.getElementById('ne-bz2-ml').value = last.bz2_ml || '';
+    document.getElementById('ne-bz2-dauer').value = last.bz2_dauer || '';
+    document.getElementById('ne-bz2-freq').value = last.bz2_freq || '';
+    document.getElementById('ne-bz2-zeit').value = last.bz2_zeit || '';
+    setWTFromStr('bz2', last.bz2_tage || '');
+    document.getElementById('ne-sys-vol').value = last.sys_vol || '';
+    document.getElementById('ne-kt-rate').value = last.kt_rate || '';
+  }
+  document.getElementById('ne-titel').textContent = curKunde.name;
+  document.getElementById('ne-sub').textContent = curKunde.anlagen[curAnlage].name + ' · ' + todayStr();
+  prevTab = 'protokolle'; tab('neuer-eintrag'); calcAll();
+}
+
+// "Datum & Zähler übertragen" – exakt wie neuerBesuch in der RKW-App
+function ladeZurBearbeitung(idx) {
+  const anlage = curKunde?.anlagen[curAnlage];
+  const p = anlage?.protokolle[idx];
+  if (!p) return;
+  editMode = true; editProtokollId = idx;
+
+  // Neues Datum setzen, altes Datum = datum_neu des geladenen Eintrags
+  document.getElementById('ne-datum-alt').value = p.datum_neu || '';
+  document.getElementById('ne-datum-neu').value = todayStr();
+
+  // Zähler: alt = neu des letzten Eintrags, neu = leer
+  document.getElementById('ne-zw-alt').value = p.zw_neu || '';
+  document.getElementById('ne-zw-neu').value = '';
+
+  // Konstante Felder übernehmen (bleiben gleich)
+  document.getElementById('ne-lf-soll').value = p.lf_soll || '';
+  document.getElementById('ne-zw-lf').value = p.zw_lf || '';
+  document.getElementById('ne-zw-cl').value = p.zw_cl || '';
+  document.getElementById('ne-zw-haerte').value = p.zw_haerte || '';
+  document.getElementById('ne-zw-datum').value = p.zw_datum || '';
+  document.getElementById('ne-bz1-ml').value = p.bz1_ml || '';
+  document.getElementById('ne-bz1-dauer').value = p.bz1_dauer || '';
+  document.getElementById('ne-bz1-freq').value = p.bz1_freq || '';
+  document.getElementById('ne-bz1-zeit').value = p.bz1_zeit || '';
+  setWTFromStr('bz1', p.bz1_tage || '');
+  document.getElementById('ne-bz2-ml').value = p.bz2_ml || '';
+  document.getElementById('ne-bz2-dauer').value = p.bz2_dauer || '';
+  document.getElementById('ne-bz2-freq').value = p.bz2_freq || '';
+  document.getElementById('ne-bz2-zeit').value = p.bz2_zeit || '';
+  setWTFromStr('bz2', p.bz2_tage || '');
+  document.getElementById('ne-sys-vol').value = p.sys_vol || '';
+  document.getElementById('ne-kt-rate').value = p.kt_rate || '';
+
+  // Alle mess-spezifischen Felder leeren
+  ['ne-lf-ist','ne-lf-gem','ne-haerte','ne-bz-fs-vor','ne-bz-fs-nach','ne-bz-lager',
+   'ne-kt-fs-vor','ne-kt-fs-nach','ne-kt-lager','ne-bemerkung'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  // IO auf IO zurücksetzen
+  document.querySelectorAll('.io-row').forEach(row => {
+    row.querySelectorAll('.io-btn').forEach((b,i) => b.classList.toggle('si', i===0));
+    row.querySelectorAll('.io-btn').forEach((b,i) => { if(i>0) b.classList.remove('sn','si'); });
+    row.querySelector('.io-btn')?.classList.add('si');
+  });
+  // Flags leeren
+  ['flag-kt','flag-bz','flag-ag','flag-prob'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('on','prob'); el.querySelector('.fc-box').textContent = ''; }
+  });
+  document.getElementById('abw-out').innerHTML = '';
+  document.getElementById('ne-titel').textContent = curKunde.name;
+  document.getElementById('ne-sub').textContent = curKunde.anlagen[curAnlage].name + ' · ' + todayStr() + ' (Übertrag von ' + p.datum_neu + ')';
+  prevTab = 'protokolle'; tab('neuer-eintrag'); calcAll();
+}
+
+function neuerBesuch() {
+  // Datum: neu → alt, heute → neu
+  const datNeu = document.getElementById('ne-datum-neu').value;
+  document.getElementById('ne-datum-alt').value = datNeu || document.getElementById('ne-datum-alt').value;
+  document.getElementById('ne-datum-neu').value = todayStr();
+  // Zähler: neu → alt, neu = leer
+  const zwNeu = document.getElementById('ne-zw-neu').value;
+  document.getElementById('ne-zw-alt').value = zwNeu || '';
+  document.getElementById('ne-zw-neu').value = '';
+  calcAll();
+}
+
+function clearForm() {
+  ['ne-lf-soll','ne-lf-ist','ne-lf-gem','ne-haerte','ne-zw-lf','ne-zw-cl','ne-zw-haerte','ne-zw-datum',
+   'ne-zw-alt','ne-zw-neu','ne-aw-zaehler','ne-bz1-ml','ne-bz1-dauer','ne-bz1-freq','ne-bz1-zeit',
+   'ne-bz2-ml','ne-bz2-dauer','ne-bz2-freq','ne-bz2-zeit','ne-sys-vol','ne-kt-rate',
+   'ne-bz-fs-vor','ne-bz-fs-nach','ne-bz-lager','ne-kt-fs-vor','ne-kt-fs-nach','ne-kt-lager','ne-bemerkung'
+  ].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  // Notiz-Felder für Flags
+  ['notiz-ag','notiz-prob'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; el.style.display = 'none'; }
+  });
+  // Wochentag-Buttons zurücksetzen
+  document.querySelectorAll('.wt-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('abw-out').innerHTML = '';
+  document.getElementById('bz1-ergebnis').innerHTML = '';
+  document.getElementById('bz2-ergebnis').innerHTML = '';
+  document.getElementById('ne-kt-soll').textContent = '–';
+  document.getElementById('ne-kt-soll').className = 'cbox';
+  ['flag-kt','flag-bz','flag-ag','flag-prob'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('on','prob'); el.querySelector('.fc-box').textContent = ''; }
+  });
+  document.querySelectorAll('.io-row').forEach(row => {
+    row.querySelectorAll('.io-btn').forEach(b => b.classList.remove('si','sn'));
+    row.querySelector('.io-btn')?.classList.add('si');
+  });
+}
+
+// ── WOCHENTAG TOGGLE ──────────────────────────────────────────────────────
+function toggleWT(btn, bz) {
+  btn.classList.toggle('active');
+  // Dos./Woche automatisch aus aktiven Tagen zählen
+  const count = document.querySelectorAll(`#wt-${bz} .wt-btn.active`).length;
+  const freqEl = document.getElementById(`ne-${bz}-freq`);
+  if (freqEl) { freqEl.value = count || ''; }
+  calcAll();
+}
+function getWTTage(bz) {
+  return Array.from(document.querySelectorAll(`#wt-${bz} .wt-btn.active`)).map(b=>b.textContent).join('/');
+}
+function setWTFromStr(bz, str) {
+  if (!str) return;
+  const active = str.split('/');
+  document.querySelectorAll(`#wt-${bz} .wt-btn`).forEach(b => {
+    b.classList.toggle('active', active.includes(b.textContent.trim()));
+  });
+}
+
+// ── BERECHNUNGEN LIVE ──────────────────────────────────────────────────────
+function calcAll() {
+  // LF Abweichung: Handgerät vs. Regler-Anzeige (nicht vs. Soll!)
+  const ist = parseFloat(document.getElementById('ne-lf-ist').value) || 0;
+  const gem = parseFloat(document.getElementById('ne-lf-gem').value) || 0;
+  const abw = gem - ist;
+  const pct = ist ? Math.abs(abw / ist * 100) : 0;
+  let cls = 'ok', ic = '✓';
+  if (pct > 8) { cls = 'err'; ic = '!!'; } else if (pct > 4) { cls = 'warn'; ic = '!'; }
+  document.getElementById('abw-out').innerHTML = (gem && ist)
+    ? `<span class="abw-pill ${cls}">${abw >= 0 ? '+' : ''}${abw.toFixed(0)} µS/cm ${ic}</span>`
+    : '';
+
+  // Verbrauch: ZW-alt jetzt als echtes Eingabefeld
+  const zwAlt = parseFloat(document.getElementById('ne-zw-alt').value) || 0;
+  const zwNeu = parseFloat(document.getElementById('ne-zw-neu').value) || 0;
+  const verb = (zwNeu > 0 && zwAlt > 0 && zwNeu > zwAlt) ? zwNeu - zwAlt : 0;
+  const tage = tageDiff(document.getElementById('ne-datum-alt').value, document.getElementById('ne-datum-neu').value) || 14;
+  const verbTag = tage > 0 && verb > 0 ? verb / tage : 0;
+  const vb = document.getElementById('ne-verb-box');
+  const vtb = document.getElementById('ne-verb-tag-box');
+  vb.textContent = verb > 0 ? fmt(verb, 1) + ' m³' : '–';
+  vb.className = 'cbox' + (verb > 0 ? ' ok' : '');
+  vtb.textContent = verbTag > 0 ? fmt(verbTag, 2) + ' m³/Tag' : '–';
+  vtb.className = 'cbox';
+
+  // Datum-Bereich für exakte BZ-Berechnung
+  const datAlt = document.getElementById('ne-datum-alt').value;
+  const datNeu = document.getElementById('ne-datum-neu').value;
+
+  // BZ1 — freq aus Wochentag-Buttons, tageStr aus Buttons
+  const bz1ml = parseFloat(document.getElementById('ne-bz1-ml').value) || 0;
+  const bz1d = parseFloat(document.getElementById('ne-bz1-dauer').value) || 0;
+  const bz1fEl = document.getElementById('ne-bz1-freq');
+  const bz1f = parseFloat(bz1fEl.value) || 0;
+  const bz1tage = getWTTage('bz1');
+  const bz1zeit = document.getElementById('ne-bz1-zeit').value || '';
+  const sysVol = parseFloat(document.getElementById('ne-sys-vol').value) || 0;
+  const bz1 = calcBZ(bz1ml, bz1d, bz1f, sysVol, tage, bz1tage, datAlt, datNeu, bz1zeit);
+  const bz1el = document.getElementById('bz1-ergebnis');
+  if (bz1ml && bz1d) {
+    const bz1info = bz1.anzahl_dosierungen > 0
+      ? `${bz1.anzahl_dosierungen}× dosiert (${bz1tage||'?'})`
+      : `${fmt(tage/7*bz1f,1)}× gesch.`;
+    bz1el.innerHTML = `<div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div><div class="pvl">Dos./Dosierung</div><div class="pvv">${fmt(bz1.dos_pro_dos, 3)} L</div></div>
+      <div><div class="pvl">Dos./Woche</div><div class="pvv">${fmt(bz1.dos_pro_woche, 2)} L</div></div>
+      <div><div class="pvl">ml/m³ Systemvol.</div><div class="pvv ${bz1.ml_m3 >= 100 && bz1.ml_m3 <= 400 ? 'ok' : 'w'}">${fmt(bz1.ml_m3, 0)} ml/m³</div></div>
+      <div><div class="pvl">Soll seit letztem Besuch</div><div class="pvv warn">${fmt(bz1.verbrauch_seit, 2)} L <span style="font-size:10px;opacity:0.7;">(${bz1info})</span></div></div>
+    </div>`;
+  } else bz1el.innerHTML = '';
+
+  // BZ2
+  const bz2ml = parseFloat(document.getElementById('ne-bz2-ml').value) || 0;
+  const bz2d = parseFloat(document.getElementById('ne-bz2-dauer').value) || 0;
+  const bz2f = parseFloat(document.getElementById('ne-bz2-freq').value) || 0;
+  const bz2tage = getWTTage('bz2');
+  const bz2zeit = document.getElementById('ne-bz2-zeit').value || '';
+  const bz2 = calcBZ(bz2ml, bz2d, bz2f, sysVol, tage, bz2tage, datAlt, datNeu, bz2zeit);
+  const bz2el = document.getElementById('bz2-ergebnis');
+  if (bz2ml && bz2d) {
+    const bz2info = bz2.anzahl_dosierungen > 0
+      ? `${bz2.anzahl_dosierungen}× dosiert (${bz2tage||'?'})`
+      : `${fmt(tage/7*bz2f,1)}× gesch.`;
+    bz2el.innerHTML = `<div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div><div class="pvl">Dos./Dosierung</div><div class="pvv">${fmt(bz2.dos_pro_dos, 3)} L</div></div>
+      <div><div class="pvl">Dos./Woche</div><div class="pvv">${fmt(bz2.dos_pro_woche, 2)} L</div></div>
+      <div><div class="pvl">ml/m³ Systemvol.</div><div class="pvv ${bz2.ml_m3 >= 100 && bz2.ml_m3 <= 400 ? 'ok' : 'w'}">${fmt(bz2.ml_m3, 0)} ml/m³</div></div>
+      <div><div class="pvl">Soll seit letztem Besuch</div><div class="pvv warn">${fmt(bz2.verbrauch_seit, 2)} L <span style="font-size:10px;opacity:0.7;">(${bz2info})</span></div></div>
+    </div>`;
+  } else bz2el.innerHTML = '';
+
+  // KT
+  const ktRate = parseFloat(document.getElementById('ne-kt-rate').value) || 0;
+  const ktSoll = ktRate > 0 && verb > 0 ? calcKT(ktRate, verb) : 0;
+  const ktEl = document.getElementById('ne-kt-soll');
+  ktEl.textContent = ktSoll > 0 ? fmt(ktSoll, 2) + ' L' : '–';
+  ktEl.className = 'cbox' + (ktSoll > 0 ? ' warn' : '');
+
+  // BZ Spiegel im Füllstand-Block
+  const bzFsDosierInfo = document.getElementById('bz-fs-dosier-info');
+  if (bzFsDosierInfo) {
+    if (bz1ml && bz1d) {
+      bzFsDosierInfo.style.display = 'block';
+      document.getElementById('bz-fs-dos-pro-dos').textContent = fmt(bz1.dos_pro_dos, 3) + ' L';
+      document.getElementById('bz-fs-dos-pro-woche').textContent = fmt(bz1.dos_pro_woche, 2) + ' L';
+      const bzSollEl = document.getElementById('bz-fs-soll');
+      bzSollEl.textContent = fmt(bz1.verbrauch_seit, 2) + ' L';
+      const bz1infoShort = bz1.anzahl_dosierungen > 0 ? `(${bz1.anzahl_dosierungen}× dosiert)` : '';
+      if (bz1infoShort) bzSollEl.textContent += ' ' + bz1infoShort;
+    } else {
+      bzFsDosierInfo.style.display = 'none';
+    }
+  }
+}
+
+// ── SPEICHERN ──────────────────────────────────────────────────────────────
+function getIOVal(row) {
+  const btns = row.querySelectorAll('.io-btn');
+  if (btns[0]?.classList.contains('si')) return btns[0].textContent.trim().split(' ')[0];
+  if (btns[1]?.classList.contains('sn')) return 'NIO';
+  return btns[0]?.textContent.trim().split(' ')[0] || 'IO';
+}
+
+function saveEntry() {
+  if (!curKunde) { alert('Bitte zuerst einen Kunden auswählen.'); return; }
+  const ioRows = document.querySelectorAll('.io-row');
+  const protokoll = {
+    id: Date.now(),
+    datum_alt: document.getElementById('ne-datum-alt').value,
+    datum_neu: document.getElementById('ne-datum-neu').value || todayStr(),
+    techniker: document.getElementById('header-role').textContent.split('·')[0].trim(),
+    lf_soll: document.getElementById('ne-lf-soll').value,
+    lf_ist: document.getElementById('ne-lf-ist').value,
+    lf_gem: document.getElementById('ne-lf-gem').value,
+    haerte: document.getElementById('ne-haerte').value,
+    zw_datum: document.getElementById('ne-zw-datum')?.value || '',
+    zw_lf: document.getElementById('ne-zw-lf').value,
+    zw_cl: document.getElementById('ne-zw-cl').value,
+    zw_haerte: document.getElementById('ne-zw-haerte').value,
+    zw_alt: document.getElementById('ne-zw-alt').value,
+    zw_neu: document.getElementById('ne-zw-neu').value,
+    aw_zaehler: document.getElementById('ne-aw-zaehler').value,
+    bz1_ml: document.getElementById('ne-bz1-ml').value,
+    bz1_dauer: document.getElementById('ne-bz1-dauer').value,
+    bz1_freq: document.getElementById('ne-bz1-freq').value,
+    bz1_zeit: document.getElementById('ne-bz1-zeit').value,
+    bz1_tage: getWTTage('bz1'),
+    bz2_ml: document.getElementById('ne-bz2-ml').value,
+    bz2_dauer: document.getElementById('ne-bz2-dauer').value,
+    bz2_freq: document.getElementById('ne-bz2-freq').value,
+    bz2_zeit: document.getElementById('ne-bz2-zeit').value,
+    bz2_tage: getWTTage('bz2'),
+    sys_vol: document.getElementById('ne-sys-vol').value,
+    kt_rate: document.getElementById('ne-kt-rate').value,
+    bz_fs_vor: document.getElementById('ne-bz-fs-vor').value,
+    bz_fs_nach: document.getElementById('ne-bz-fs-nach').value,
+    bz_lager: document.getElementById('ne-bz-lager').value,
+    kt_fs_vor: document.getElementById('ne-kt-fs-vor').value,
+    kt_fs_nach: document.getElementById('ne-kt-fs-nach').value,
+    kt_lager: document.getElementById('ne-kt-lager').value,
+    io_bz: ioRows[0] ? getIOVal(ioRows[0]) : 'IO',
+    io_kt: ioRows[1] ? getIOVal(ioRows[1]) : 'IO',
+    io_abs: ioRows[2] ? getIOVal(ioRows[2]) : 'IO',
+    dipslide_gezogen: ioRows[3]?.querySelector('.si')?.textContent.includes('Gezogen') || false,
+    dipslide_ergebnis: '',
+    bemerkung: document.getElementById('ne-bemerkung').value,
+    flags: {
+      kt: document.getElementById('flag-kt').classList.contains('on'),
+      bz: document.getElementById('flag-bz').classList.contains('on'),
+      ag: document.getElementById('flag-ag').classList.contains('on'),
+      prob: document.getElementById('flag-prob').classList.contains('on'),
+      rech: true, // Jedes Protokoll ist automatisch zu berechnen
+    },
+    notiz_ag: document.getElementById('notiz-ag')?.value || '',
+    notiz_prob: document.getElementById('notiz-prob')?.value || '',
+  };
+  const db = getDB();
+  const k = db.kunden.find(k=>k.name===curKunde.name);
+  const anlageProtos = k.anlagen[curAnlage].protokolle;
+
+  if (editMode && editProtokollId !== null) {
+    // Edit-Modus: altes Protokoll suchen und ersetzen, dabei Meta-Felder erhalten
+    const oldIdx = anlageProtos.findIndex(p => p.id === editProtokollId);
+    if (oldIdx >= 0) {
+      const old = anlageProtos[oldIdx];
+      // Dipslide-Ergebnis und Archiv-Status des alten Eintrags beibehalten
+      protokoll.id = old.id; // ID beibehalten
+      protokoll.dipslide_ergebnis = old.dipslide_ergebnis || '';
+      protokoll.rech_archiv = old.rech_archiv;
+      protokoll.rech_nr = old.rech_nr;
+      protokoll.rech_datum = old.rech_datum;
+      protokoll.rech_by = old.rech_by;
+      protokoll.prob_done = old.prob_done;
+      protokoll.prob_vermerk = old.prob_vermerk;
+      protokoll.prob_vermerk_by = old.prob_vermerk_by;
+      protokoll.prob_vermerk_date = old.prob_vermerk_date;
+      anlageProtos[oldIdx] = protokoll;
+    } else {
+      anlageProtos.push(protokoll);
+    }
+    editMode = false; editProtokollId = null;
+    curKunde = k; saveDB(db);
+    renderProtoListe(); renderDosierInfo(); renderKundenListe('');
+    updateBadges(); renderAngebote(false,''); renderProbleme(false,'');
+    alert(`✅ Protokoll vom ${protokoll.datum_neu} aktualisiert!`);
+  } else {
+    // Normal: neuen Eintrag anhängen
+    anlageProtos.push(protokoll);
+    curKunde = k; saveDB(db);
+    renderProtoListe(); renderDosierInfo(); renderKundenListe('');
+    updateBadges(); renderAngebote(false,''); renderProbleme(false,'');
+    alert(`✅ Eintrag für ${curKunde.name} (${protokoll.datum_neu}) gespeichert!`);
+  }
+  tab('protokolle');
+}
+
+// ── EXCEL CSV ──────────────────────────────────────────────────────────────
+function exportCSV() {
+  if (!curKunde) return;
+  const anlage = curKunde.anlagen[curAnlage];
+  const protos = anlage?.protokolle || [];
+  const rows = [['Datum','Techniker','LF Soll','LF Ist','LF Gem.','Abw. µS','Härte °dH','ZW alt','ZW neu','Verbrauch m³','BZ Füllst.','KT Füllst.','Pumpe BZ','Pumpe KT','Absalzung','Dipslide','Bemerkung']];
+  protos.forEach(p => {
+    const abw = (parseFloat(p.lf_gem)||0) - (parseFloat(p.lf_soll)||0);
+    const verb = p.zw_neu && p.zw_alt ? parseFloat(p.zw_neu)-parseFloat(p.zw_alt) : '';
+    rows.push([p.datum_neu,p.techniker,p.lf_soll,p.lf_ist,p.lf_gem,abw.toFixed(0),p.haerte,p.zw_alt,p.zw_neu,verb?verb.toFixed(1):'',p.bz_fs_vor,p.kt_fs_vor,p.io_bz,p.io_kt,p.io_abs,p.dipslide_ergebnis||'ausstehend',p.bemerkung]);
+  });
+  const csv = rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `BTB_${curKunde.name}_${anlage.name}.csv`; a.click();
+}
+
+// ── ANGEBOTE / PROBLEME ────────────────────────────────────────────────────
+function updateBadges() {
+  const db = getDB();
+  const all = db.kunden.flatMap(k=>k.anlagen.flatMap(a=>a.protokolle.map(p=>({...p,_kunde:k.name,_anlage:a.name}))));
+  const ang = all.filter(p=>(p.flags?.kt||p.flags?.bz||p.flags?.ag)&&!p.ang_done).length;
+  const prob = all.filter(p=>p.flags?.prob&&!p.prob_done).length;
+  const ds = all.filter(p=>p.dipslide_gezogen&&!p.dipslide_ergebnis).length;
+  const notAnz = getNotizen().filter(n=>n.aktiv).length;
+  const rechAnz = (() => {
+    const db2=getDB();
+    const kunden = new Set();
+    db2.kunden.forEach(k => {
+      const hatOffen = k.anlagen.some(a => a.protokolle.some(p=>p.flags?.rech&&!p.rech_archiv));
+      if (hatOffen) kunden.add(k.name);
+    });
+    return kunden.size;
+  })();
+  document.getElementById('badge-angebote').textContent = ang;
+  document.getElementById('badge-probleme').textContent = prob;
+  const dsBadge = document.getElementById('badge-dipslide');
+  if (dsBadge) { dsBadge.textContent = ds; dsBadge.style.display = ds > 0 ? '' : 'none'; }
+  const nBadge = document.getElementById('badge-notizen');
+  if (nBadge) { nBadge.textContent = notAnz; nBadge.style.display = notAnz > 0 ? '' : 'none'; }
+  const rBadge = document.getElementById('badge-rechnung');
+  if (rBadge) { rBadge.textContent = rechAnz; rBadge.style.display = rechAnz > 0 ? '' : 'none'; }
+}
+
+let angFilterDone = false;
+
+function renderAngebote(showDone=false, search='') {
+  angFilterDone = showDone;
+  const db = getDB();
+  let all = db.kunden.flatMap(k=>k.anlagen.flatMap(a=>a.protokolle.map(p=>({...p,_kunde:k.name,_anlage:a.name}))));
+  // Nur Einträge mit mindestens einem Angebot-Flag
+  all = all.filter(p => p.flags?.kt || p.flags?.bz || p.flags?.ag);
+  // Suchfilter
+  if (search) all = all.filter(p => p._kunde.toLowerCase().includes(search.toLowerCase()));
+  // Filter offen/erledigt: zeige nur wenn mindestens ein Flag noch offen (oder showDone)
+  if (!showDone) {
+    all = all.filter(p =>
+      (p.flags?.kt && !p.ang_kt_done) ||
+      (p.flags?.bz && !p.ang_bz_done) ||
+      (p.flags?.ag && !p.ang_ag_done)
+    );
+  }
+  // Sortierung: neueste zuerst
+  all.sort((a,b) => { const da=parseDate(a.datum_neu),db2=parseDate(b.datum_neu); return (isNaN(da)||isNaN(db2))?0:db2-da; });
+
+  const el = document.getElementById('angebote-liste');
+  if (all.length===0) { el.innerHTML='<div style="color:#bae6fd;font-size:13px;">Keine Einträge.</div>'; return; }
+
+  el.innerHTML = all.map(p => {
+    const chips = [
+      p.flags?.kt ? `
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #e0f2fe;">
+          <span class="chip ${p.ang_kt_done?'ok':'fa'}">📦 KT Angebot</span>
+          <span style="flex:1;font-size:11px;color:var(--muted);">${p.ang_kt_done?'✓ erledigt':''}</span>
+          ${!p.ang_kt_done?`<button class="btn btn-blue btn-sm" onclick="erledigtFlag('${p._kunde.replace(/'/g,"\\'")}','${p._anlage.replace(/'/g,"\\'")}',${p.id},'kt')">✓ Erledigt</button>`:''}
+        </div>` : '',
+      p.flags?.bz ? `
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #e0f2fe;">
+          <span class="chip ${p.ang_bz_done?'ok':'fa'}">🧪 BZ Angebot</span>
+          <span style="flex:1;font-size:11px;color:var(--muted);">${p.ang_bz_done?'✓ erledigt':''}</span>
+          ${!p.ang_bz_done?`<button class="btn btn-blue btn-sm" onclick="erledigtFlag('${p._kunde.replace(/'/g,"\\'")}','${p._anlage.replace(/'/g,"\\'")}',${p.id},'bz')">✓ Erledigt</button>`:''}
+        </div>` : '',
+      p.flags?.ag ? `
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;">
+          <span class="chip ${p.ang_ag_done?'ok':'fa'}">📋 Allgemeines</span>
+          <span style="flex:1;font-size:11px;color:var(--muted);">${p.ang_ag_done?'✓ erledigt':''}</span>
+          ${!p.ang_ag_done?`<button class="btn btn-blue btn-sm" onclick="erledigtFlag('${p._kunde.replace(/'/g,"\\'")}','${p._anlage.replace(/'/g,"\\'")}',${p.id},'ag')">✓ Erledigt</button>`:''}
+        </div>` : '',
+    ].filter(Boolean).join('');
+
+    return `<div class="ii">
+      <div class="ii-k">${p._kunde}</div>
+      <div class="ii-a">${p._anlage} · ${p.datum_neu} · ${p.techniker||'–'}</div>
+      <div style="margin:10px 0;">${chips}</div>
+      ${p.bemerkung?`<div class="bm-box" style="margin-top:6px;font-size:12px;">📝 ${p.bemerkung}</div>`:''}
+      ${p.notiz_ag?`<div class="bm-box" style="margin-top:4px;font-size:12px;border-left-color:#fcd34d;">🔒 Intern: ${p.notiz_ag}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function erledigtFlag(kname, aname, pid, type) {
+  const db = getDB();
+  const k = db.kunden.find(k=>k.name===kname);
+  const a = k?.anlagen.find(a=>a.name===aname);
+  const p = a?.protokolle.find(p=>p.id===pid);
+  if (!p) return;
+  if (type==='kt') p.ang_kt_done = true;
+  if (type==='bz') p.ang_bz_done = true;
+  if (type==='ag') p.ang_ag_done = true;
+  // Rückwärtskompatibilität: ang_done wenn alle erledigt
+  p.ang_done = (!p.flags?.kt||p.ang_kt_done) && (!p.flags?.bz||p.ang_bz_done) && (!p.flags?.ag||p.ang_ag_done);
+  saveDB(db); updateBadges(); renderAngebote(angFilterDone, document.getElementById('ang-suche')?.value||'');
+  renderKundenListe(''); if (curKunde&&curKunde.name===kname) renderProtoListe();
+}
+
+function erledigtAngebot(kname, aname, pid) { erledigtFlag(kname,aname,pid,'kt'); }
+
+function filterAngebote(type, btn) {
+  document.getElementById('flt-ang-offen').classList.toggle('on', type==='offen');
+  document.getElementById('flt-ang-done').classList.toggle('on', type==='done');
+  renderAngebote(type==='done', document.getElementById('ang-suche')?.value||'');
+}
+
+let probFilterDone = false;
+
+function renderProbleme(showDone=false, search='') {
+  probFilterDone = showDone;
+  const db = getDB();
+  let all = db.kunden.flatMap(k=>k.anlagen.flatMap(a=>a.protokolle.map(p=>({...p,_kunde:k.name,_anlage:a.name}))));
+  all = all.filter(p => p.flags?.prob);
+  if (search) all = all.filter(p => p._kunde.toLowerCase().includes(search.toLowerCase()));
+  all = all.filter(p => showDone ? p.prob_done : !p.prob_done);
+  all.sort((a,b) => { const da=parseDate(a.datum_neu),db2=parseDate(b.datum_neu); return (isNaN(da)||isNaN(db2))?0:db2-da; });
+  const el = document.getElementById('probleme-liste');
+  if (all.length===0) {
+    el.innerHTML=`<div style="color:#bae6fd;font-size:13px;">${showDone?'Keine bearbeiteten Probleme.':'Keine offenen Probleme ✅'}</div>`;
+    return;
+  }
+  el.innerHTML = all.map(p=>`
+    <div class="ii" style="border-color:${p.prob_done?'#fcd34d':'#fca5a5'};">
+      <div class="ii-k">${p._kunde} <span style="font-weight:400;font-size:11px;color:var(--muted);">· ${p._anlage}</span></div>
+      <div class="ii-a">${p.datum_neu} · ${p.techniker||'–'}</div>
+      <div class="ii-chips"><span class="chip ${p.prob_done?'w':'fp'}">${p.prob_done?'⚡ bearbeitet':'⚠ Problem offen'}</span></div>
+      <div class="ii-txt" style="color:${p.prob_done?'var(--warn)':'var(--err)'};font-weight:500;">${p.bemerkung||'–'}</div>
+      ${p.notiz_prob?`<div class="bm-box" style="font-size:12px;border-left-color:#fca5a5;margin-bottom:8px;">🔒 Intern (Techniker): ${p.notiz_prob}</div>`:''}
+      ${p.prob_vermerk?`<div class="bm-box" style="font-size:12px;border-left-color:#f59e0b;background:#fffbeb;margin-bottom:8px;">✏️ Vermerk (${p.prob_vermerk_by||'–'}): ${p.prob_vermerk}</div>`:''}
+      <div class="ii-foot">
+        <div class="ii-date">${p.datum_neu}</div>
+        ${!p.prob_done
+          ?`<button class="btn btn-danger btn-sm" onclick="erledigtProblemModal('${p._kunde.replace(/'/g,"\\'")}','${p._anlage.replace(/'/g,"\\'")}',${p.id})">✓ Bearbeitet</button>`
+          :`<span style="font-size:11px;color:var(--warn);font-family:'DM Mono',monospace;">✓ bearbeitet</span>`}
+      </div>
+    </div>`).join('');
+}
+function erledigtProblemModal(kname, aname, pid) {
+  // Modal mit Vermerk-Eingabe
+  const existing = document.getElementById('prob-modal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'prob-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:12px;width:100%;max-width:420px;padding:20px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:var(--surface2);margin-bottom:4px;">Problem bearbeitet</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">${kname} · ${aname}</div>
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Interner Vermerk (optional)</div>
+      <textarea id="prob-vermerk-input" placeholder="z.B. Mit Kunden telefoniert — Biozid war verlegt, wurde gefunden. Nächster Techniker bitte prüfen ob wieder vorhanden."
+        style="width:100%;border:1px solid #7dd3fc;border-radius:7px;padding:10px;font-size:13px;font-family:'Barlow',sans-serif;resize:none;height:90px;outline:none;color:var(--text);"></textarea>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-blue" style="flex:1;" onclick="erledigtProblemConfirm('${kname.replace(/'/g,"\\'")}','${aname.replace(/'/g,"\\'")}',${pid})">✓ Als bearbeitet markieren</button>
+        <button class="btn btn-white" onclick="document.getElementById('prob-modal').remove()">Abbrechen</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('prob-vermerk-input')?.focus(), 50);
+}
+
+function erledigtProblemConfirm(kname, aname, pid) {
+  const vermerk = document.getElementById('prob-vermerk-input')?.value?.trim() || '';
+  document.getElementById('prob-modal')?.remove();
+  const db = getDB(); const k = db.kunden.find(k=>k.name===kname);
+  const a = k?.anlagen.find(a=>a.name===aname); const p = a?.protokolle.find(p=>p.id===pid);
+  if (p) {
+    p.prob_done = true;
+    if (vermerk) {
+      p.prob_vermerk = vermerk;
+      p.prob_vermerk_by = document.getElementById('header-role')?.textContent?.split('·')[0]?.trim() || '–';
+      p.prob_vermerk_date = todayStr();
+    }
+    saveDB(db);
+    renderProbleme(probFilterDone, document.getElementById('prob-suche')?.value||'');
+    updateBadges(); renderKundenListe('');
+    if (curKunde&&curKunde.name===kname) renderProtoListe();
+  }
+}
+
+// Rückwärtskompatibilität
+function erledigtProblem(kname, aname, pid) { erledigtProblemModal(kname, aname, pid); }
+function filterProbleme(type, btn) {
+  document.getElementById('flt-prob-offen').classList.toggle('on', type==='offen');
+  document.getElementById('flt-prob-done').classList.toggle('on', type==='done');
+  renderProbleme(type==='done', document.getElementById('prob-suche')?.value||'');
+}
+
+// ── KUNDEN-NOTIZEN ────────────────────────────────────────────────────────
+let notizenFilterMode = 'aktiv';
+
+function getNotizen() {
+  try { return JSON.parse(localStorage.getItem('btb_notizen') || '[]'); } catch { return []; }
+}
+function saveNotizen(n) { localStorage.setItem('btb_notizen', JSON.stringify(n)); }
+
+function neueKundenNotiz(prefillKunde) {
+  const db = getDB();
+  const kundenNamen = db.kunden.map(k=>k.name);
+  const existing = document.getElementById('notiz-modal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'notiz-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:flex-end;';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px 16px 0 0;width:100%;padding:20px;max-height:90vh;overflow-y:auto;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;color:var(--surface2);margin-bottom:14px;">📌 Neue Kunden-Notiz</div>
+      <div class="f"><label style="display:block;font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Kunde</label>
+        <select id="notiz-kunde-sel" style="width:100%;background:#f0f9ff;border:1px solid #7dd3fc;border-radius:6px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px;outline:none;color:var(--text);-webkit-appearance:none;">
+          <option value="">— Kunden wählen —</option>
+          ${kundenNamen.map(n=>`<option value="${n}" ${n===prefillKunde?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </div>
+      <div class="f" style="margin-top:10px;">
+        <label style="display:block;font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Notiz</label>
+        <textarea id="notiz-text-input" placeholder="z.B. Nicht bei Einfahrt X parken! Oder: Bei Ankunft Herrn Müller anrufen: 0170..."
+          style="width:100%;border:1px solid #7dd3fc;border-radius:7px;padding:10px;font-size:13px;font-family:'Barlow',sans-serif;resize:none;height:100px;outline:none;color:var(--text);"></textarea>
+      </div>
+      <div class="f" style="margin-top:10px;">
+        <label style="display:block;font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;">Art</label>
+        <div style="display:flex;gap:8px;">
+          <button id="not-typ-perm" class="io-btn si" onclick="notTyp('perm')" style="flex:1;">📌 Permanent</button>
+          <button id="not-typ-temp" class="io-btn" onclick="notTyp('temp')" style="flex:1;">⏳ Temporär</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-blue" style="flex:1;" onclick="speichereNotiz()">✓ Speichern</button>
+        <button class="btn btn-white" onclick="document.getElementById('notiz-modal').remove()">Abbrechen</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+let _notizTyp = 'perm';
+function notTyp(t) {
+  _notizTyp = t;
+  document.getElementById('not-typ-perm').className = 'io-btn' + (t==='perm'?' si':'');
+  document.getElementById('not-typ-temp').className = 'io-btn' + (t==='temp'?' si':'');
+}
+
+function speichereNotiz() {
+  const kunde = document.getElementById('notiz-kunde-sel')?.value;
+  const text = document.getElementById('notiz-text-input')?.value?.trim();
+  if (!kunde || !text) { alert('Bitte Kunden und Notiztext eingeben.'); return; }
+  document.getElementById('notiz-modal')?.remove();
+  const notizen = getNotizen();
+  notizen.push({
+    id: Date.now(), kunde, text, typ: _notizTyp,
+    erstellt: todayStr(),
+    erstellt_by: document.getElementById('header-role')?.textContent?.split('·')[0]?.trim() || '–',
+    aktiv: true
+  });
+  saveNotizen(notizen);
+  updateBadges();
+  renderNotizenListe('');
+  renderKundenListe('');
+}
+
+function loescheNotiz(id) {
+  const notizen = getNotizen();
+  const idx = notizen.findIndex(n=>n.id===id);
+  if (idx >= 0) { notizen[idx].aktiv = false; saveNotizen(notizen); }
+  updateBadges(); renderNotizenListe(''); renderKundenListe('');
+}
+
+function filterNotizen(mode, btn) {
+  notizenFilterMode = mode;
+  document.getElementById('flt-not-aktiv').classList.toggle('on', mode==='aktiv');
+  document.getElementById('flt-not-alle').classList.toggle('on', mode==='alle');
+  renderNotizenListe(document.getElementById('notizen-suche')?.value||'');
+}
+
+function renderNotizenListe(search='') {
+  let notizen = getNotizen();
+  if (search) notizen = notizen.filter(n => n.kunde.toLowerCase().includes(search.toLowerCase()));
+  if (notizenFilterMode === 'aktiv') notizen = notizen.filter(n => n.aktiv);
+  notizen.sort((a,b) => b.id - a.id);
+  const el = document.getElementById('notizen-liste');
+  if (!el) return;
+  if (notizen.length === 0) {
+    el.innerHTML = `<div style="color:#bae6fd;font-size:13px;">${notizenFilterMode==='aktiv'?'Keine aktiven Notizen.':'Keine Notizen vorhanden.'}</div>`;
+    return;
+  }
+  el.innerHTML = notizen.map(n => `
+    <div class="ii" style="border-color:${n.aktiv?'#7dd3fc':'#cbd5e1'};${!n.aktiv?'opacity:0.5;':''}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <div class="ii-k" style="flex:1;">${n.kunde}</div>
+        <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${n.typ==='perm'?'#e0f2fe':'#fffbeb'};color:${n.typ==='perm'?'var(--surface2)':'var(--warn)'};font-family:'DM Mono',monospace;">
+          ${n.typ==='perm'?'📌 permanent':'⏳ temporär'}
+        </span>
+      </div>
+      <div style="font-size:13px;color:var(--text);margin-bottom:8px;line-height:1.4;">${n.text}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">${n.erstellt} · ${n.erstellt_by}</div>
+        ${n.aktiv
+          ? `<button class="btn btn-white btn-sm" onclick="loescheNotiz(${n.id})">✕ Löschen</button>`
+          : `<span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">gelöscht</span>`}
+      </div>
+    </div>`).join('');
+}
+// ── ZU BERECHNEN ──────────────────────────────────────────────────────────
+let rechnungFilterMode = 'offen';
+
+function renderRechnungListe(search='') {
+  const db = getDB();
+  const el = document.getElementById('rechnung-liste');
+  if (!el) return;
+
+  // Pro Kunde: welches ist das neueste unarchivierte Protokoll-Datum?
+  // Nur Anlagen mit Protokollen von DIESEM Datum zählen als "aktueller Batch"
+  const kunden = [];
+  db.kunden.forEach(k => {
+    // Alle unarchivierte rech-Protokolle über alle Anlagen
+    const alleOffen = k.anlagen.flatMap(a =>
+      a.protokolle.filter(p => p.flags?.rech && !p.rech_archiv).map(p => p.datum_neu)
+    );
+    // Auch archivierte prüfen (für Archiv-Tab)
+    const alleArchiv = k.anlagen.flatMap(a =>
+      a.protokolle.filter(p => p.flags?.rech && p.rech_archiv).map(p => p.rech_datum||p.datum_neu)
+    );
+
+    if (alleOffen.length === 0 && alleArchiv.length === 0) return;
+
+    let batchDatum = null;
+    let istArchiv = false;
+
+    if (rechnungFilterMode === 'offen') {
+      if (alleOffen.length === 0) return;
+      // Neuestes offenes Datum = aktueller Batch
+      batchDatum = alleOffen.sort((a,b) => parseDate(b)-parseDate(a))[0];
+    } else {
+      if (alleArchiv.length === 0) return;
+      // Neuestes archiviertes Rechnungsdatum
+      batchDatum = alleArchiv.sort((a,b) => parseDate(b)-parseDate(a))[0];
+      istArchiv = true;
+    }
+
+    // Für jeden Batch: welche Anlagen haben ein Protokoll mit diesem Datum (oder nahe dran ±1 Tag)?
+    // "Nahe dran" wegen Techniker der an zwei verschiedenen Tagen kommt
+    // Aber eigentlich: exakt dasselbe datum_neu
+    const anlagenInfo = k.anlagen.map(a => {
+      let batchProto = null;
+      if (!istArchiv) {
+        // Offener Batch: hat diese Anlage ein offenes Protokoll vom batch-Datum?
+        batchProto = a.protokolle.find(p =>
+          p.flags?.rech && !p.rech_archiv && p.datum_neu === batchDatum
+        );
+      } else {
+        // Archiv-Batch: hat diese Anlage ein archiviertes Protokoll?
+        batchProto = a.protokolle.find(p =>
+          p.flags?.rech && p.rech_archiv
+        );
+      }
+      // Hat die Anlage überhaupt ein offenes Protokoll (nicht zwingend vom batch)?
+      const hatOffenAnderes = !istArchiv && a.protokolle.some(p => p.flags?.rech && !p.rech_archiv && p.datum_neu !== batchDatum);
+      return {
+        name: a.name,
+        imBatch: !!batchProto,
+        proto: batchProto,
+        hatOffenAnderes
+      };
+    });
+
+    const imBatch = anlagenInfo.filter(a => a.imBatch);
+    const nochOffen = anlagenInfo.filter(a => !a.imBatch && !istArchiv); // Anlagen ohne Protokoll für diesen Batch
+
+    // Archiv-Info
+    const letzteArchiv = k.anlagen.flatMap(a =>
+      a.protokolle.filter(p=>p.flags?.rech&&p.rech_archiv&&p.rech_nr)
+    ).sort((a,b)=>parseDate(b.rech_datum||b.datum_neu)-parseDate(a.rech_datum||a.datum_neu))[0]||null;
+
+    kunden.push({
+      name: k.name,
+      gesamtAnlagen: k.anlagen.length,
+      imBatch,          // Anlagen die beim aktuellen Batch dabei sind
+      nochOffen,        // Anlagen die noch kein Protokoll für diesen Batch haben
+      batchDatum,
+      istArchiv,
+      letzteArchiv
+    });
+  });
+
+  let liste = kunden;
+  if (search) liste = liste.filter(k => k.name.toLowerCase().includes(search.toLowerCase()));
+
+  if (liste.length === 0) {
+    el.innerHTML = `<div style="color:#bae6fd;font-size:13px;">${rechnungFilterMode==='offen'?'Keine offenen Posten \u2705':'Kein Archiv vorhanden.'}</div>`;
+    return;
+  }
+
+  el.innerHTML = liste.map(k => {
+    const gemacht = k.imBatch.length;
+    const gesamt = k.gesamtAnlagen;
+    const alleGemacht = gemacht === gesamt;
+
+    const counterColor = k.istArchiv ? 'var(--ok)' : alleGemacht ? 'var(--surface2)' : 'var(--warn)';
+    const counterBg    = k.istArchiv ? '#f0fdf4'   : alleGemacht ? '#e0f2fe'        : '#fffbeb';
+    const counterBorder= k.istArchiv ? '#86efac'   : alleGemacht ? '#7dd3fc'        : '#fcd34d';
+
+    // Anlagen die im Batch sind (haben Protokoll für diesen Besuch)
+    const batchZeilen = k.imBatch.map(a => `
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f9ff;">
+        <span style="font-size:12px;flex:1;color:var(--text);">
+          <strong>${a.name}</strong>
+          ${a.proto ? ` · ${a.proto.datum_neu} · ${a.proto.techniker||'–'}` : ''}
+        </span>
+        <span style="font-size:11px;font-family:'DM Mono',monospace;font-weight:600;color:var(--ok);">✓ protokolliert</span>
+      </div>`).join('');
+
+    // Anlagen die NICHT im Batch sind (noch kein Protokoll für diesen Besuch)
+    const fehlendeZeilen = k.nochOffen.map(a => `
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f9ff;opacity:0.6;">
+        <span style="font-size:12px;flex:1;color:var(--muted);"><strong>${a.name}</strong></span>
+        <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--warn);">noch offen</span>
+      </div>`).join('');
+
+    const formular = !k.istArchiv ? `
+      <div style="background:#e0f2fe;border-radius:8px;padding:12px;margin-top:10px;">
+        <div style="font-size:11px;font-weight:600;color:var(--surface2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">
+          Rechnung erfassen · ${k.batchDatum||''}
+          ${!alleGemacht?'<span style="color:var(--warn);margin-left:8px;">⚠ '+k.nochOffen.length+' Anlage(n) fehlen noch</span>':''}
+        </div>
+        <div class="r3" style="gap:8px;margin-bottom:10px;">
+          <div class="f" style="margin-bottom:0;"><label>Re.-Nummer</label>
+            <input type="text" id="rn-${k.name.replace(/\W/g,'_')}" placeholder="RE-2025-001"
+              style="width:100%;background:#fff;border:1px solid #7dd3fc;border-radius:6px;padding:8px 10px;font-family:'DM Mono',monospace;font-size:13px;outline:none;color:var(--text);">
+          </div>
+          <div class="f" style="margin-bottom:0;"><label>Datum</label>
+            <input type="text" id="rd-${k.name.replace(/\W/g,'_')}" placeholder="${todayStr()}"
+              style="width:100%;background:#fff;border:1px solid #7dd3fc;border-radius:6px;padding:8px 10px;font-family:'DM Mono',monospace;font-size:13px;outline:none;color:var(--text);">
+          </div>
+          <div class="f" style="margin-bottom:0;"><label>Kürzel</label>
+            <input type="text" id="rb-${k.name.replace(/\W/g,'_')}" placeholder="MK"
+              style="width:100%;background:#fff;border:1px solid #7dd3fc;border-radius:6px;padding:8px 10px;font-family:'DM Mono',monospace;font-size:13px;outline:none;color:var(--text);">
+          </div>
+        </div>
+        <button class="btn btn-blue btn-w" onclick="archiviereRechnungKunde('${k.name.replace(/'/g,"\\'")}','${k.batchDatum||''}')">
+          \u2713 Als abgerechnet archivieren
+        </button>
+      </div>` : `
+      <div style="background:#f0fdf4;border-radius:6px;padding:10px 12px;margin-top:8px;">
+        <div style="display:flex;gap:20px;flex-wrap:wrap;">
+          <div><div class="pvl">Re.-Nr.</div><div class="pvv" style="font-family:'DM Mono',monospace;">${k.letzteArchiv?.rech_nr||'–'}</div></div>
+          <div><div class="pvl">Datum</div><div class="pvv" style="font-family:'DM Mono',monospace;">${k.letzteArchiv?.rech_datum||'–'}</div></div>
+          <div><div class="pvl">Kürzel</div><div class="pvv" style="font-family:'DM Mono',monospace;">${k.letzteArchiv?.rech_by||'–'}</div></div>
+        </div>
+      </div>`;
+
+    return `<div class="ii" style="border-color:${counterBorder};">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div class="ii-k" style="flex:1;">${k.name}</div>
+        <div style="background:${counterBg};border:1.5px solid ${counterBorder};border-radius:20px;padding:4px 12px;font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:${counterColor};white-space:nowrap;">
+          ${gemacht}/${gesamt}
+        </div>
+      </div>
+      ${batchZeilen}${fehlendeZeilen}${formular}
+    </div>`;
+  }).join('');
+}
+
+function archiviereRechnungKunde(kname, batchDatum) {
+  const sid = kname.replace(/\W/g,'_');
+  const nr = document.getElementById('rn-'+sid)?.value?.trim();
+  const dat = document.getElementById('rd-'+sid)?.value?.trim() || todayStr();
+  const by = document.getElementById('rb-'+sid)?.value?.trim() || '–';
+  if (!nr) { alert('Bitte Rechnungsnummer eingeben.'); return; }
+  const db = getDB();
+  const k = db.kunden.find(k=>k.name===kname);
+  if (!k) return;
+  k.anlagen.forEach(a => {
+    // Nur Protokolle vom batch-Datum archivieren (oder alle offenen wenn kein Datum)
+    a.protokolle.filter(p => p.flags?.rech && !p.rech_archiv &&
+      (!batchDatum || p.datum_neu === batchDatum)
+    ).forEach(p => {
+      p.rech_archiv=true; p.rech_nr=nr; p.rech_datum=dat; p.rech_by=by;
+    });
+  });
+  saveDB(db); updateBadges(); renderRechnungListe(document.getElementById('rech-suche')?.value||'');
+}
+
+function archiviereRechnung(kname, aname, pid) { archiviereRechnungKunde(kname, ''); }
+
+function filterRechnung(mode, btn) {
+  rechnungFilterMode = mode;
+  document.getElementById('flt-rech-offen').classList.toggle('on', mode==='offen');
+  document.getElementById('flt-rech-arch').classList.toggle('on', mode==='arch');
+  renderRechnungListe(document.getElementById('rech-suche')?.value||'');
+}
+
+function tab(id) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+id)?.classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>{ if(t.getAttribute('onclick')===`tab('${id}')`) t.classList.add('active'); });
+  curTab = id;
+  document.getElementById('scroll').scrollTop = 0;
+  document.getElementById('fab').classList.toggle('hidden', id==='neuer-eintrag');
+  if (id==='protokolle') {
+    document.getElementById('proto-context').style.display = curKunde ? 'block' : 'none';
+    document.getElementById('proto-all').style.display = curKunde ? 'none' : 'block';
+    if (curKunde) { renderAnlagen(); renderProtoListe(); renderDosierInfo(); }
+  }
+  if (id==='dipslide') { dsSearchVal=''; document.getElementById('ds-suche').value=''; renderDipslideView(''); }
+  if (id==='angebote') renderAngebote(angFilterDone, '');
+  if (id==='probleme') renderProbleme(probFilterDone, '');
+  if (id==='notizen') { renderNotizenListe(''); }
+  if (id==='rechnung') { renderRechnungListe(''); }
+}
+
+function fabAction() {
+  if (curTab === 'neuer-eintrag') return;
+  if (!curKunde) {
+    // Fokus auf Suchfeld setzen und Hinweis geben
+    tab('kunden');
+    const inp = document.getElementById('kundensuche');
+    inp.focus();
+    inp.placeholder = '⚠️ Bitte zuerst Kunden auswählen...';
+    inp.style.borderColor = 'var(--err)';
+    setTimeout(() => {
+      inp.placeholder = 'Kunde suchen oder neu anlegen...';
+      inp.style.borderColor = '';
+    }, 2500);
+    return;
+  }
+  neuerEintrag();
+}
+function cancelEntry() { editMode = false; editProtokollId = null; tab(prevTab); }
+function backToKunden() { curKunde=null; document.getElementById('kundensuche').value=''; tab('kunden'); renderKundenListe(''); }
+
+function togP(hdr) {
+  const body = hdr.nextElementSibling;
+  const c = hdr.querySelector('.chev');
+  const o = body.classList.toggle('open');
+  if (c) c.classList.toggle('open', o);
+}
+
+function ioT(btn, cls) {
+  btn.closest('.io-row').querySelectorAll('.io-btn').forEach(b=>b.classList.remove('si','sn'));
+  btn.classList.add(cls);
+}
+
+function fcT(el, isProb) {
+  el.classList.toggle('on');
+  if (isProb) el.classList.toggle('prob', el.classList.contains('on'));
+  el.querySelector('.fc-box').textContent = el.classList.contains('on') ? '✓' : '';
+}
+function fcTmitNotiz(el, type) {
+  el.classList.toggle('on');
+  if (type === 'prob') el.classList.toggle('prob', el.classList.contains('on'));
+  el.querySelector('.fc-box').textContent = el.classList.contains('on') ? '✓' : '';
+  const ta = document.getElementById('notiz-' + type);
+  if (ta) ta.style.display = el.classList.contains('on') ? 'block' : 'none';
+}
+
+// ── DIPSLIDE VIEW ─────────────────────────────────────────────────────────
+let dsFilterMode = 'offen'; // 'offen' | 'alle'
+let dsSearchVal = '';
+
+function dsFilter(mode, btn) {
+  dsFilterMode = mode;
+  document.querySelectorAll('#ds-filter-row .fp2').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderDipslideView(dsSearchVal);
+}
+
+function onDsSearchKey(e) {
+  const list = document.getElementById('ds-ac-list');
+  const items = list.querySelectorAll('.ac-item');
+  if (e.key === 'ArrowDown') { let h = parseInt(list.dataset.h||'-1')+1; h=Math.min(h,items.length-1); list.dataset.h=h; items.forEach((it,i)=>it.classList.toggle('highlighted',i===h)); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { let h = parseInt(list.dataset.h||'0')-1; h=Math.max(h,0); list.dataset.h=h; items.forEach((it,i)=>it.classList.toggle('highlighted',i===h)); e.preventDefault(); }
+  else if (e.key === 'Enter') { const h=parseInt(list.dataset.h||-1); if(h>=0) items[h]?.click(); }
+  else if (e.key === 'Escape') { list.classList.remove('show'); }
+}
+
+function renderDipslideView(filter) {
+  dsSearchVal = filter || '';
+  const db = getDB();
+
+  // Autocomplete für Suchfeld
+  const acList = document.getElementById('ds-ac-list');
+  if (filter && filter.trim()) {
+    const matches = db.kunden.filter(k => k.name.toLowerCase().includes(filter.toLowerCase()));
+    if (matches.length > 0) {
+      acList.innerHTML = matches.map(k => `
+        <div class="ac-item" onclick="dsSuchKunde('${k.name.replace(/'/g,"\\'")}')">
+          <strong>${k.name}</strong>
+          <div class="ac-item-sub">${k.anlagen?.length||0} Anlage(n)</div>
+        </div>`).join('');
+      acList.classList.add('show');
+    } else {
+      acList.classList.remove('show');
+    }
+  } else {
+    acList.classList.remove('show');
+  }
+
+  // Alle Protokolle mit Dipslide-Status sammeln
+  let all = db.kunden.flatMap(k => k.anlagen.flatMap(a =>
+    a.protokolle
+      .filter(p => p.dipslide_gezogen)
+      .map(p => ({...p, _kunde: k.name, _anlage: a.name}))
+  ));
+
+  // Filter: nur ausstehende oder alle
+  if (dsFilterMode === 'offen') {
+    all = all.filter(p => !p.dipslide_ergebnis);
+  }
+
+  // Suchfilter
+  if (filter && filter.trim()) {
+    all = all.filter(p => p._kunde.toLowerCase().includes(filter.toLowerCase()));
+  }
+
+  // Nach Datum sortieren (neueste zuerst)
+  all.sort((a,b) => {
+    const da = parseDate(a.datum_neu), db2 = parseDate(b.datum_neu);
+    return (isNaN(da)||isNaN(db2)) ? 0 : db2-da;
+  });
+
+  const el = document.getElementById('dipslide-view-liste');
+  if (!el) return;
+
+  if (all.length === 0) {
+    el.innerHTML = `<div style="color:#bae6fd;font-size:13px;padding:8px 0;">
+      ${dsFilterMode==='offen' ? '✅ Alle Dipslides ausgewertet.' : 'Noch keine Dipslide-Einträge vorhanden.'}
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = all.map(p => {
+    const hatErgebnis = !!p.dipslide_ergebnis;
+    const ergebnisCls = dsCls(p.dipslide_ergebnis);
+    return `
+    <div class="card" style="${hatErgebnis ? 'opacity:0.75;' : ''}">
+      <div class="card-title" style="${hatErgebnis ? '' : 'background:#fff3cd;border-color:#fcd34d;color:var(--warn);'}">
+        <span>🧫</span>
+        <span>${p._kunde}</span>
+        <span style="font-weight:400;margin-left:4px;">· ${p._anlage}</span>
+        ${hatErgebnis
+          ? `<span class="chip ${ergebnisCls}" style="margin-left:auto;">${p.dipslide_ergebnis}</span>`
+          : `<span class="chip w" style="margin-left:auto;">⏳ ausstehend</span>`}
+      </div>
+      <div class="card-body">
+        <div class="r2" style="margin-bottom:10px;">
+          <div><div class="ml">Gezogen am</div><div class="mv">${p.datum_neu || '–'}</div></div>
+          <div><div class="ml">Techniker</div><div class="mv">${p.techniker || '–'}</div></div>
+        </div>
+        ${hatErgebnis
+          ? `<div class="cbox ${ergebnisCls}" style="font-size:13px;">✓ Ergebnis: <strong>${p.dipslide_ergebnis}</strong></div>`
+          : `<div class="ds-row">
+              <label>Ergebnis:</label>
+              <select id="ds-v-${p.id}">
+                <option value="">— Wert wählen —</option>
+                ${dsOptions()}
+              </select>
+              <button class="btn btn-blue btn-sm"
+                onclick="saveDipslideView('${p._kunde.replace(/'/g,"\\'")}','${p._anlage.replace(/'/g,"\\'")}',${p.id})">
+                Eintragen
+              </button>
+            </div>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function dsSuchKunde(name) {
+  document.getElementById('ds-suche').value = name;
+  document.getElementById('ds-ac-list').classList.remove('show');
+  renderDipslideView(name);
+}
+
+function saveDipslideView(kname, aname, pid) {
+  const val = document.getElementById('ds-v-' + pid)?.value;
+  if (!val) { alert('Bitte ein Ergebnis auswählen.'); return; }
+  const db = getDB();
+  const k = db.kunden.find(k => k.name === kname);
+  const a = k?.anlagen.find(a => a.name === aname);
+  const p = a?.protokolle.find(p => p.id === pid);
+  if (p) {
+    p.dipslide_ergebnis = val;
+    saveDB(db);
+    updateBadges();
+    renderDipslideView(dsSearchVal);
+    renderKundenListe('');
+    // Wenn der Kunde gerade offen ist, auch Protokollliste aktualisieren
+    if (curKunde && curKunde.name === kname) renderProtoListe();
+  }
+}
+
+function renderDipslideOffen() {
+  // Wird noch im Protokoll-Tab (proto-all) genutzt — weiterhin unterstützen
+  renderDipslideView('');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ds-suche') && !e.target.closest('#ds-ac-list')) {
+    document.getElementById('ds-ac-list')?.classList.remove('show');
+  }
+});
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+renderKundenListe('');
+updateBadges();
+renderAngebote(false, '');
+renderProbleme(false, '');
+renderNotizenListe('');
+renderRechnungListe('');
+const dsBadgeInit = document.getElementById('badge-dipslide');
+if (dsBadgeInit && dsBadgeInit.textContent === '0') dsBadgeInit.style.display = 'none';
+</script>
+</body>
+</html>
